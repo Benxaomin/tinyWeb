@@ -1,13 +1,887 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>html</title>
+    <title>任涵 - 个人主页</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-cover: rgba(0, 0, 0, 0.35);
+            --card-bg: rgb(0 0 0 / 25%);
+            --card-hover-bg: rgb(0 0 0 / 32%);
+            --text-main: #efefef;
+            --text-sub: rgba(239, 239, 239, 0.6);
+            --text-dim: rgba(239, 239, 239, 0.4);
+            --accent: #f0945e;
+            --accent-glow: rgba(240, 148, 94, 0.3);
+            --radius: 6px;
+        }
+
+        html {
+            scrollbar-width: none;
+        }
+
+        html::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            font-family: 'Noto Sans SC', sans-serif;
+            color: var(--text-main);
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        /* ==================== LOADING ==================== */
+        #loading {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #333;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        #loading.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            perspective: 800px;
+        }
+
+        .loader-inner {
+            position: absolute;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .loader-inner:nth-child(1) {
+            left: 0; top: 0;
+            border-bottom: 2.5px solid #efefef;
+            animation: spin1 1s linear infinite;
+        }
+
+        .loader-inner:nth-child(2) {
+            right: 0; top: 0;
+            border-right: 2.5px solid #efefef;
+            animation: spin2 1s linear infinite;
+        }
+
+        .loader-inner:nth-child(3) {
+            right: 0; bottom: 0;
+            border-top: 2.5px solid #efefef;
+            animation: spin3 1s linear infinite;
+        }
+
+        .loader-text {
+            position: absolute;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin-top: 48px;
+        }
+
+        @keyframes spin1 { from { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0); } to { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); } }
+        @keyframes spin2 { from { transform: rotateX(50deg) rotateY(10deg) rotateZ(0); } to { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); } }
+        @keyframes spin3 { from { transform: rotateX(35deg) rotateY(55deg) rotateZ(0); } to { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); } }
+
+        /* ==================== BACKGROUND ==================== */
+        .bg-all {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .bg-all img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: blur(0px) brightness(0.8);
+            transform: scale(1.05);
+            animation: bgZoom 20s ease-in-out infinite alternate;
+            transition: filter 0.8s ease;
+        }
+
+        .bg-all img.error {
+            display: none;
+        }
+
+        @keyframes bgZoom {
+            0% { transform: scale(1.05); }
+            100% { transform: scale(1.15); }
+        }
+
+        .bg-cover {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, var(--bg-cover) 100%);
+        }
+
+        /* fallback gradient when no image */
+        .bg-fallback {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 30%, #2c5364 60%, #0f2027 100%);
+            z-index: -1;
+        }
+
+        /* ==================== SECTION ==================== */
+        .section {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* ==================== MAIN CONTAINER ==================== */
+        .container {
+            max-width: 660px;
+            width: 66vw;
+            margin: 0 auto;
+            animation: fadeBlur 1.2s ease 0.3s both;
+        }
+
+        @keyframes fadeBlur {
+            0% { opacity: 0; filter: blur(10px); transform: translateY(20px); }
+            100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+        }
+
+        .row {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        /* ==================== CARDS ==================== */
+        .cards {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            transition: all 0.3s ease;
+        }
+
+        .cards:hover {
+            background: var(--card-hover-bg);
+        }
+
+        /* ==================== LEFT COLUMN ==================== */
+        .col-left {
+            flex: 0 0 240px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            position: sticky;
+            top: 2rem;
+            margin-top: 15vh;
+        }
+
+        /* Avatar Card */
+        .avatar-card {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            padding: 1rem;
+            background: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .avatar-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.15);
+            transition: transform 0.6s ease;
+        }
+
+        .avatar-card:hover .avatar-img {
+            transform: rotate(360deg);
+        }
+
+        .avatar-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            margin-bottom: 0.2rem;
+        }
+
+        .avatar-desc {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            letter-spacing: 0.5px;
+        }
+
+        /* Message Card */
+        .message-card {
+            padding: 1.2rem 1.4rem;
+            position: relative;
+        }
+
+        .message-card .fa-quote-left,
+        .message-card .fa-quote-right {
+            color: var(--accent);
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .message-card .fa-quote-left {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+        }
+
+        .message-card .fa-quote-right {
+            position: absolute;
+            bottom: 10px;
+            right: 12px;
+        }
+
+        .message-text {
+            font-size: 0.85rem;
+            font-weight: 300;
+            line-height: 1.8;
+            color: var(--text-sub);
+            padding: 0.3rem 0;
+        }
+
+        .message-text strong {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        /* Social Card */
+        .social-card {
+            padding: 0.8rem 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .social-card a {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            background: rgb(0 0 0 / 18%);
+            color: var(--text-sub);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-card a:hover {
+            background: var(--accent);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* ==================== RIGHT COLUMN ==================== */
+        .col-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            min-width: 0;
+            margin-top: 15vh;
+        }
+
+        /* Top Row: Hitokoto + Time */
+        .top-row {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .top-row > * {
+            flex: 1;
+        }
+
+        /* Hitokoto Card */
+        .hitokoto-card {
+            padding: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hitokoto-label {
+            font-size: 0.7rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+
+        .hitokoto-text {
+            font-size: 0.9rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-main);
+            flex: 1;
+        }
+
+        .hitokoto-from {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-align: right;
+            margin-top: 0.6rem;
+        }
+
+        /* Time Card */
+        .time-card {
+            padding: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .time-date {
+            font-size: 0.75rem;
+            font-weight: 300;
+            color: var(--text-sub);
+            margin-bottom: 0.3rem;
+            letter-spacing: 1px;
+        }
+
+        .time-clock {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text-main);
+            letter-spacing: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .time-weekday {
+            font-size: 0.7rem;
+            color: var(--accent);
+            margin-top: 0.3rem;
+            letter-spacing: 1px;
+        }
+
+        /* Hitokoto Card */
+        .hitokoto-card {
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hitokoto-label {
+            font-size: 0.7rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+        }
+
+        .hitokoto-text {
+            font-size: 0.95rem;
+            font-weight: 300;
+            line-height: 1.8;
+            color: var(--text-main);
+            flex: 1;
+        }
+
+        .hitokoto-from {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-align: right;
+            margin-top: 0.8rem;
+        }
+
+        /* Time Card */
+        .time-card {
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .time-date {
+            font-size: 0.78rem;
+            font-weight: 300;
+            color: var(--text-sub);
+            margin-bottom: 0.3rem;
+            letter-spacing: 1px;
+        }
+
+        .time-clock {
+            font-size: 1.6rem;
+            font-weight: 300;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .time-weekday {
+            font-size: 0.75rem;
+            color: var(--accent);
+            margin-top: 0.4rem;
+            letter-spacing: 2px;
+        }
+
+        /* Section Divider */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0 0.3rem;
+        }
+
+        .section-divider i {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+
+        .section-divider span {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+        }
+
+        /* Link Cards Grid */
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.7rem;
+        }
+
+        .link-card {
+            padding: 0.9rem;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-main);
+            cursor: pointer;
+            display: block;
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .link-card:active {
+            transform: scale(0.97);
+        }
+
+        .link-card i {
+            font-size: 1.4rem;
+            display: block;
+            margin-bottom: 0.6rem;
+            transition: color 0.3s;
+        }
+
+        .link-card:hover i {
+            color: var(--accent);
+        }
+
+        .link-card span {
+            font-size: 0.8rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        /* ==================== PROGRESS SECTION ==================== */
+        .progress-card {
+            padding: 1rem 1.2rem;
+        }
+
+        .progress-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-label {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 4px;
+            background: rgb(255 255 255 / 8%);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--accent), #fcd281);
+            transition: width 1s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -1px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #fcd281;
+            box-shadow: 0 0 6px var(--accent-glow);
+        }
+
+        /* ==================== FOOTER ==================== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            text-align: center;
+            padding: 0.8rem;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        .footer a {
+            color: var(--text-sub);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: var(--accent);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .section {
+                padding: 1rem;
+                align-items: flex-start;
+                padding-top: 1.5rem;
+                padding-bottom: 3rem;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+
+            .col-left {
+                flex: none;
+                position: static;
+            }
+
+            .avatar-card {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                text-align: left;
+                padding: 1.2rem;
+            }
+
+            .avatar-img {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 0;
+            }
+
+            .top-row {
+                flex-direction: column;
+            }
+
+            .links-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .time-clock {
+                font-size: 1.6rem;
+            }
+
+            .message-card {
+                padding: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .links-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+
+            .link-card {
+                padding: 1rem;
+            }
+
+            .link-card i {
+                font-size: 1.2rem;
+            }
+
+            .hitokoto-card, .time-card {
+                min-height: auto;
+                padding: 1.2rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>任涵</h1>    
-    <img src="6eb3142e089146578ad0dacd790e1d2f.jpg" alt="微信图片" width="250">
-    <p>🎓 一名热爱技术、正在学习编程的学生，用代码探索更多可能。</p>
+
+    <!-- Loading -->
+    <div id="loading">
+        <div class="loader">
+            <div class="loader-inner"></div>
+            <div class="loader-inner"></div>
+            <div class="loader-inner"></div>
+        </div>
+        <div class="loader-text">LOADING</div>
+    </div>
+
+    <!-- Background -->
+    <div class="bg-all">
+        <div class="bg-fallback"></div>
+        <img id="bg" src="background7.webp" alt=""
+             onerror="this.classList.add('error');">
+        <div class="cover"></div>
+    </div>
+
+    <!-- Main Content -->
+    <section class="section">
+        <div class="container">
+            <div class="row">
+
+                <!-- ========== LEFT COLUMN ========== -->
+                <div class="col-left">
+                    <!-- Avatar -->
+                    <div class="avatar-card cards">
+                        <img class="avatar-img" src="6eb3142e089146578ad0dacd790e1d2f.jpg" alt="任涵">
+                        <div>
+                            <div class="avatar-name">任涵</div>
+                            <div class="avatar-desc">Explorer · Coder · Dreamer</div>
+                        </div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="message-card cards">
+                        <i class="fa-solid fa-quote-left"></i>
+                        <div class="message-text">
+                            <strong>Hello World !</strong><br>
+                            一名热爱技术、正在学习编程的学生，用代码探索更多可能，在数字世界里留下足迹。
+                        </div>
+                        <i class="fa-solid fa-quote-right"></i>
+                    </div>
+
+                    <!-- Social -->
+                    <div class="social-card cards">
+                        <a href="https://github.com" target="_blank" title="GitHub">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                        <a href="mailto:example@email.com" title="Email">
+                            <i class="fa-solid fa-envelope"></i>
+                        </a>
+                        <a href="https://space.bilibili.com" target="_blank" title="Bilibili">
+                            <i class="fa-brands fa-bilibili"></i>
+                        </a>
+                        <a href="#" title="QQ">
+                            <i class="fa-brands fa-qq"></i>
+                        </a>
+                        <a href="#" title="WeChat">
+                            <i class="fa-brands fa-weixin"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ========== RIGHT COLUMN ========== -->
+                <div class="col-right">
+
+                    <!-- Hitokoto + Time -->
+                    <div class="top-row">
+                        <div class="hitokoto-card cards">
+                            <div class="hitokoto-label"><i class="fa-solid fa-feather"></i>&ensp;一言</div>
+                            <div class="hitokoto-text" id="hitokoto_text">每一个人都应该明确自己的方向和位置</div>
+                            <div class="hitokoto-from">-「 <span id="hitokoto_from">無名</span> 」</div>
+                        </div>
+                        <div class="time-card cards">
+                            <div class="time-date" id="time_date">2000 年 1 月 1 日</div>
+                            <div class="time-clock" id="time_clock">00:00:00</div>
+                            <div class="time-weekday" id="time_weekday">星期一</div>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="section-divider">
+                        <span>网站列表</span>
+                    </div>
+
+                    <!-- Links Grid -->
+                    <div class="links-grid">
+                        <a class="link-card cards" href="#" target="_blank">
+                            <i class="fa-solid fa-blog"></i>
+                            <span>博客</span>
+                        </a>
+                        <a class="link-card cards" href="#" target="_blank">
+                            <i class="fa-solid fa-code"></i>
+                            <span>项目</span>
+                        </a>
+                        <a class="link-card cards" href="#" target="_blank">
+                            <i class="fa-solid fa-music"></i>
+                            <span>音乐</span>
+                        </a>
+                        <a class="link-card cards" href="#" target="_blank">
+                            <i class="fa-solid fa-images"></i>
+                            <span>相册</span>
+                        </a>
+                        <a class="link-card cards" href="#" target="_blank">
+                            <i class="fa-solid fa-bookmark"></i>
+                            <span>书签</span>
+                        </a>
+                        <a class="link-card cards" href="#" target="_blank">
+                            <i class="fa-solid fa-compass"></i>
+                            <span>探索</span>
+                        </a>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="section-divider">
+                        <span>时间胶囊</span>
+                    </div>
+
+                    <!-- Progress -->
+                    <div class="progress-card cards">
+                        <div class="progress-item">
+                            <div class="progress-label">今日已度过 <span id="p_day">0</span>%</div>
+                            <div class="progress-track"><div class="progress-fill" id="pf_day" style="width:0%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-label">本周已度过 <span id="p_week">0</span>%</div>
+                            <div class="progress-track"><div class="progress-fill" id="pf_week" style="width:0%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-label">本月已度过 <span id="p_month">0</span>%</div>
+                            <div class="progress-track"><div class="progress-fill" id="pf_month" style="width:0%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-label">今年已度过 <span id="p_year">0</span>%</div>
+                            <div class="progress-track"><div class="progress-fill" id="pf_year" style="width:0%"></div></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <span>Copyright &copy; <span id="footer_year"></span> 任涵</span>
+        &ensp;·&ensp;
+        <span>一个热爱代码的学生</span>
+    </footer>
+
+    <script>
+        // ========== Loading ==========
+        window.addEventListener('load', function () {
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hide');
+            }, 800);
+        });
+
+        // ========== Time ==========
+        function updateTime() {
+            const now = new Date();
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const pad = n => String(n).padStart(2, '0');
+
+            document.getElementById('time_date').textContent =
+                `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+            document.getElementById('time_clock').textContent =
+                `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            document.getElementById('time_weekday').textContent = weekdays[now.getDay()];
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // ========== Progress ==========
+        function updateProgress() {
+            const now = new Date();
+            const hours = now.getHours() + now.getMinutes() / 60;
+            const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+            const dayOfMonth = now.getDate();
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const daysInYear = ((now.getFullYear() % 4 === 0 && now.getFullYear() % 100 !== 0) || now.getFullYear() % 400 === 0) ? 366 : 365;
+            const msInDay = 24 * 60 * 60 * 1000;
+
+            const dayPct = (hours / 24 * 100).toFixed(1);
+            const weekPct = ((dayOfWeek - 1 + hours / 24) / 7 * 100).toFixed(1);
+            const monthPct = ((dayOfMonth - 1 + hours / 24) / daysInMonth * 100).toFixed(1);
+            const yearPct = ((now - startOfYear) / (daysInYear * msInDay) * 100).toFixed(1);
+
+            document.getElementById('p_day').textContent = dayPct;
+            document.getElementById('p_week').textContent = weekPct;
+            document.getElementById('p_month').textContent = monthPct;
+            document.getElementById('p_year').textContent = yearPct;
+
+            document.getElementById('pf_day').style.width = dayPct + '%';
+            document.getElementById('pf_week').style.width = weekPct + '%';
+            document.getElementById('pf_month').style.width = monthPct + '%';
+            document.getElementById('pf_year').style.width = yearPct + '%';
+        }
+        updateProgress();
+        setInterval(updateProgress, 60000);
+
+        // ========== Hitokoto ==========
+        function fetchHitokoto() {
+            fetch('https://v1.hitokoto.cn/?c=a&c=b&c=d&c=i&c=k')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('hitokoto_text').textContent = data.hitokoto;
+                    document.getElementById('hitokoto_from').textContent = data.from || '無名';
+                })
+                .catch(() => {});
+        }
+        fetchHitokoto();
+        setInterval(fetchHitokoto, 30000);
+
+        // ========== Footer Year ==========
+        document.getElementById('footer_year').textContent = new Date().getFullYear();
+    </script>
 </body>
-</html> 
+</html>
