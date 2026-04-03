@@ -1031,18 +1031,18 @@
             display: none;
         }
 
-        /* --- 备忘录面板：从图标右侧弹出 --- */
+        /* --- 备忘录面板：从图标左侧弹出 --- */
         .todo-panel {
             position: absolute;
             top: -0.5rem;
-            right: calc(100% - 1rem);
+            left: calc(100% + 0.5rem);
             width: 280px;
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.3s ease;
             opacity: 0;
-            transform: translateX(12px) scale(0.96);
-            transform-origin: top right;
+            transform: translateX(-12px) scale(0.96);
+            transform-origin: top left;
             background: var(--card-bg);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
@@ -1304,14 +1304,14 @@
         .todo-history {
             position: absolute;
             top: -0.5rem;
-            right: calc(100% - 1rem);
+            left: calc(100% + 0.5rem);
             width: 300px;
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.3s ease;
             opacity: 0;
-            transform: translateX(12px) scale(0.96);
-            transform-origin: top right;
+            transform: translateX(-12px) scale(0.96);
+            transform-origin: top left;
             background: var(--card-bg);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
@@ -1471,6 +1471,7 @@
 
         @media (max-width: 768px) {
             .todo-panel, .todo-history {
+                left: auto;
                 right: -10px;
                 width: calc(100vw - 40px);
                 max-width: 320px;
@@ -1607,7 +1608,7 @@
 
                     <!-- Links Grid -->
                     <div class="links-grid">
-                        <a class="link-card cards" href="#" target="_blank">
+                        <a class="link-card cards" href="https://juejin.cn/user/36736481371856" target="_blank">
                             <i class="fa-solid fa-blog"></i>
                             <span>博客</span>
                         </a>
