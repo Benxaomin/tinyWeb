@@ -1173,6 +1173,27 @@
         }
 
         /* ==================== RESPONSIVE ==================== */
+
+        /* 中等屏幕（≤900px）：三栏变两栏，留言板换行到右侧下方 */
+        @media (max-width: 900px) {
+            .container {
+                max-width: 660px;
+                width: 80vw;
+            }
+
+            .row {
+                flex-wrap: wrap;           /* 允许换行 */
+            }
+
+            .col-guestbook {
+                flex: 1 1 100%;           /* 独占一行 */
+                position: static;
+                margin-top: 1rem;
+                max-height: none;
+                order: 3;                 /* 排在最后 */
+            }
+        }
+
         @media (max-width: 768px) {
             .section {
                 padding: 1rem;
@@ -1188,6 +1209,13 @@
             .col-left {
                 flex: none;
                 position: static;
+            }
+
+            .col-guestbook {
+                flex: none;
+                position: static;
+                margin-top: 0;
+                max-height: none;
             }
 
             .avatar-card {
