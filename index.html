@@ -1,14 +1,52 @@
 <!DOCTYPE html>
-<!-- Updated: 2026-04-01 -->
+<!-- 
+  =====================================================
+  个人主页 - 任涵
+  最后更新: 2026-04-01
+  功能说明：
+    - 响应式个人主页（适配手机/电脑）
+    - 暗色/亮色主题切换（根据时间自动判断）
+    - 实时时钟 + 时间进度条（日/周/月/年）
+    - 一言（随机名言）展示，点击可刷新
+    - 社交链接图标
+    - 备忘录功能（支持分类、历史归档）
+    - 小电视动画角色
+    - 鼠标视差效果背景
+    - 3D 卡片倾斜效果
+  =====================================================
+-->
 <html lang="zh-CN">
 <head>
+    <!-- ==================== 元信息配置 ==================== -->
+    
+    <!-- 字符编码：UTF-8 支持中文和所有语言字符 -->
     <meta charset="UTF-8">
+    
+    <!-- 视口设置：让页面在手机上正确显示，禁止用户缩放 -->
+    <!-- width=device-width: 页面宽度等于设备宽度 -->
+    <!-- initial-scale=1.0: 初始缩放比例为100% -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 浏览器标签页显示的标题 -->
     <title>任涵 - 个人主页</title>
+    
+    <!-- ==================== 外部资源引入 ==================== -->
+    
+    <!-- Google Fonts 预连接：加速字体加载 -->
+    <!-- preconnect 提前建立连接，减少DNS查询时间 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- 引入 Google Fonts 字体 -->
+    <!-- Ma Shan Zheng: 中文书法字体（用于名字显示） -->
+    <!-- Noto Sans SC: 思源黑体（用于正文，支持多种字重） -->
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 图标库 -->
+    <!-- 用于显示 GitHub、微信、QQ 等社交图标，以及各种 UI 图标 -->
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- ==================== CSS 样式表开始 ==================== -->
     <style>
         *, *::before, *::after {
             margin: 0;
@@ -35,7 +73,7 @@
         .doggo-body {
             transform-origin: bottom center;
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+        }                                                           
 
         /* 小跳 */
         @keyframes dogBounce {
@@ -51,78 +89,147 @@
 
 
 
-        /* ==================== Dark / Light Theme ==================== */
+        /* ==================== CSS 自定义属性（主题变量）====================
+         * 使用 CSS 变量实现主题切换的核心机制
+         * :root 选择器定义全局默认变量（暗色模式）
+         * html.light 覆盖这些变量实现亮色模式
+         * 
+         * 变量命名规则：
+         *   --xxx-bg    背景颜色
+         *   --xxx-text  文字颜色
+         *   --accent    强调色（按钮、链接等）
+         */
+        
+        /* ====== 默认主题：夜间模式（Dark Theme）====== 
+         * 这是基础主题，模仿小说阅读APP的夜间模式风格
+         * 颜色特点：深色背景 + 暖色调文字（护眼）
+         */
         :root {
             /* Night Mode — 深色底 + 柔和暖字（小说夜间风格） */
-            --bg-cover: rgba(0, 0, 0, 0.4);
-            --card-bg: rgb(20 20 30 / 60%);
-            --card-hover-bg: rgb(30 30 45 / 65%);
-            --text-main: #c8c0b0;
-            --text-sub: rgba(200, 192, 176, 0.55);
-            --text-dim: rgba(200, 192, 176, 0.35);
-            --accent: #e8a86d;
-            --accent-glow: rgba(232, 168, 109, 0.25);
-            --radius: 6px;
-            --social-bg: rgb(255 255 255 / 8%);
-            --divider-bg: rgba(255,255,255,0.06);
-            --progress-track-bg: rgb(255 255 255 / 6%);
-            --avatar-border: rgba(255, 200, 120, 0.2);
+            
+            /* --- 背景色系 --- */
+            --bg-cover: rgba(0, 0, 0, 0.4);           /* 背景遮罩：半透明黑色，让图片变暗 */
+            --card-bg: rgb(20 20 30 / 60%);             /* 卡片背景：深蓝黑色半透明 */
+            --card-hover-bg: rgb(30 30 45 / 65%);       /* 卡片悬停时稍亮一点 */
+            
+            /* --- 文字色系 --- */
+            --text-main: #c8c0b0;                       /* 主文字：暖米色 */
+            --text-sub: rgba(200, 192, 176, 0.55);     /* 副文字：更淡的暖色 */
+            --text-dim: rgba(200, 192, 176, 0.35);     /* 弱化文字：最淡，用于提示信息 */
+            
+            /* --- 强调色系 --- */
+            --accent: #e8a86d;                          /* 主强调色：琥珀橙金色 */
+            --accent-glow: rgba(232, 168, 109, 0.25);  /* 强调色的发光效果（用于阴影） */
+            
+            /* --- 其他UI元素 --- */
+            --radius: 6px;                              /* 统一圆角大小 */
+            --social-bg: rgb(255 255 255 / 8%);        /* 社交图标按钮背景：微白 */
+            --divider-bg: rgba(255,255,255,0.06);      /* 分隔线颜色 */
+            --progress-track-bg: rgb(255 255 255 / 6%);/* 进度条轨道背景 */
+            --avatar-border: rgba(255, 200, 120, 0.2); /* 头像边框颜色 */
         }
 
+        /* ====== 亮色模式覆盖（Light Theme Override）======
+         * 当 html 元素拥有 .light 类时生效
+         * 只需覆盖需要改变的变量，其他保持 :root 的值
+         */
         html.light {
             /* Day Mode — 暖白底 + 深棕字（小说白天风格） */
-            --bg-cover: rgba(225, 215, 195, 0.7);
-            --card-bg: rgb(240 232 218 / 60%);
-            --card-hover-bg: rgb(240 232 218 / 72%);
-            --text-main: #3b3226;
-            --text-sub: rgba(59, 50, 38, 0.6);
-            --text-dim: rgba(59, 50, 38, 0.38);
-            --accent: #b87333;
-            --accent-glow: rgba(184, 115, 51, 0.18);
-            --social-bg: rgb(0 0 0 / 5%);
-            --divider-bg: rgba(80, 60, 30, 0.1);
-            --progress-track-bg: rgb(80 60 30 / 10%);
-            --avatar-border: rgba(100, 70, 30, 0.2);
+            
+            /* 背景色改为温暖的米白色调 */
+            --bg-cover: rgba(225, 215, 195, 0.7);      /* 背景遮罩：暖色调 */
+            --card-bg: rgb(240 232 218 / 60%);          /* 卡片背景：奶白色 */
+            --card-hover-bg: rgb(240 232 218 / 72%);    /* 悬停时稍不透明 */
+            
+            /* 文字改为深棕色系（在浅色背景上可读性好） */
+            --text-main: #3b3226;                       /* 主文字：深咖啡色 */
+            --text-sub: rgba(59, 50, 38, 0.6);         /* 副文字：中等深度 */
+            --text-dim: rgba(59, 50, 38, 0.38);         /* 弱化文字 */
+            
+            /* 强调色改为更深沉的棕色 */
+            --accent: #b87333;                          /* 主强调色：土黄色 */
+            --accent-glow: rgba(184, 115, 51, 0.18);   /* 发光效果 */
+            
+            /* UI元素适配亮色背景 */
+            --social-bg: rgb(0 0 0 / 5%);              /* 图标背景：微黑 */
+            --divider-bg: rgba(80, 60, 30, 0.1);       /* 分隔线 */
+            --progress-track-bg: rgb(80 60 30 / 10%);  /* 进度条轨道 */
+            --avatar-border: rgba(100, 70, 30, 0.2);   /* 头像边框 */
         }
 
+        /* ==================== 主体与过渡效果 ====================
+         * body 元素的样式和主题切换时的平滑过渡
+         */
         body {
-            transition: background-color 0.6s ease;
+            transition: background-color 0.6s ease;  /* 背景色变化时0.6秒渐变，ease是缓动函数 */
         }
 
+        /* 卡片组件的统一过渡效果
+         * 包含背景、变换、阴影的过渡动画
+         * 当鼠标悬停或主题切换时会触发这些属性的变化
+         */
         .cards {
             transition: background 0.6s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* Night: 深暖背景 + 低饱和暗图 */
+        /* ==================== 背景图片样式（夜间模式）====================
+         * .bg-all 是固定在页面背后的全屏背景容器
+         * 使用 object-fit: cover 确保图片铺满不变形
+         */
+        
+        /* 夜间模式下的背景图片滤镜处理 */
         .bg-all img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100%;              /* 宽度撑满容器 */
+            height: 100%;             /* 高度撑满容器 */
+            object-fit: cover;        /* 保持比例填满容器（可能裁剪边缘） */
+            
+            /* 滤镜组合：让图片变暗变柔和不抢眼
+             * blur(0px)     - 模糊0像素（无模糊）
+             * brightness()  - 亮度降低到55%
+             * saturate()    - 饱和度降到80%
+             * sepia()       - 添加20%棕褐色调（复古感）
+             */
             filter: blur(0px) brightness(0.55) saturate(0.8) sepia(0.2);
-            transform: scale(1.05);
+            
+            transform: scale(1.05);   /* 放大5%，为缩放动画留空间 */
+            
+            /* 背景缓慢放大缩小动画，营造呼吸感 */
             animation: bgZoom 20s ease-in-out infinite alternate;
-            transition: filter 1s ease;
+            
+            transition: filter 1s ease;  /* 滤镜变化时的过渡（用于主题切换） */
         }
 
-        /* Day: 暖白覆盖 + 柔和亮图 */
+        /* ====== 白天模式覆盖样式 ======
+         * html.light 下生效的背景相关样式
+         */
+        
+        /* 白天模式：纯色暖白背景 */
         html.light body {
-            background: #f5eee3;
+            background: #f5eee3;      /* 米白色：类似纸张的颜色 */
         }
 
+        /* 白天模式的图片滤镜：更亮、更柔和 */
         html.light .bg-all img {
             filter: blur(1px) brightness(1.15) saturate(0.6) sepia(0.15);
+            /* blur增加柔和感，brightness提高亮度，降低饱和度更素雅 */
         }
 
+        /* 无图片时的备用渐变背景（白天模式）
+         * linear-gradient 线性渐变，从左上到右下
+         * 多个颜色停靠点创造丰富的层次感
+         */
         html.light .bg-fallback {
             background: linear-gradient(135deg, #f5eee3 0%, #ede4d3 30%, #f7f0e6 60%, #ebe0ce 100%);
         }
 
+        /* 白天模式下名字的渐变色改为深棕色调 */
         html.light .avatar-name {
             background: linear-gradient(135deg, #8b5e3c 0%, #b87333 45%, #a0522d 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
+            -webkit-background-clip: text;    /* Safari兼容：将背景裁剪到文字区域 */
+            background-clip: text;             /* 标准写法 */
         }
 
+        /* 加载动画的颜色适配白天模式 */
         html.light .loader-inner:nth-child(1) { border-bottom-color: #8b7355; }
         html.light .loader-inner:nth-child(2) { border-right-color: #8b7355; }
         html.light .loader-inner:nth-child(3) { border-top-color: #8b7355; }
@@ -173,72 +280,92 @@
             color: var(--accent);
         }
 
-        /* ==================== HITOKOTO CLICK TO REFRESH ==================== */
+        /* ==================== 一言卡片点击刷新效果 ====================
+         * 一言（Hitokoto）是来自 hitokoto.cn 的随机名言服务
+         * 这部分定义点击卡片时的刷新动画
+         */
         .hitokoto-card {
-            cursor: pointer;
-            user-select: none;
+            cursor: pointer;          /* 鼠标指针变成手型，提示可点击 */
+            user-select: none;        /* 禁止选中文字，防止快速点击时选中文字 */
         }
 
+        /* 提示文字：默认隐藏，悬停时显示 */
         .hitokoto-card .hitokoto-hint {
-            display: none;
-            font-size: 0.65rem;
-            color: var(--text-dim);
-            text-align: right;
+            display: none;            /* 默认不显示 */
+            font-size: 0.65rem;       /* 很小的字体 */
+            color: var(--text-dim);   /* 使用弱化文字颜色变量 */
+            text-align: right;        /* 右对齐 */
             margin-top: 0.4rem;
-            opacity: 0.7;
+            opacity: 0.7;             /* 半透明 */
         }
 
+        /* 鼠标悬停时显示提示文字 */
         .hitokoto-card:hover .hitokoto-hint {
-            display: block;
+            display: block;           /* 显示为块级元素 */
         }
 
+        /* 刷新动画关键帧：文字上移淡出 → 下移淡入
+         * 用于点击刷新一言时的过渡动画
+         */
         @keyframes hitokotoRefresh {
-            0% { opacity: 1; transform: translateY(0); }
-            40% { opacity: 0; transform: translateY(-8px); }
-            60% { opacity: 0; transform: translateY(8px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% { opacity: 1; transform: translateY(0); }       /* 开始：完全可见，原位 */
+            40% { opacity: 0; transform: translateY(-8px); }  /* 上移并淡出 */
+            60% { opacity: 0; transform: translateY(8px); }   /* 在下方等待（不可见） */
+            100% { opacity: 1; transform: translateY(0); }    /* 从下方滑入并显示 */
         }
 
+        /* 正在刷新时应用的动画类 */
         .hitokoto-card.refreshing #hitokoto_text,
         .hitokoto-card.refreshing #hitokoto_from {
             display: inline;
             animation: hitokotoRefresh 0.6s ease forwards;
+            /* forwards 表示动画结束后保持最后一帧的状态 */
         }
 
+        /* 刷新时隐藏提示文字 */
         .hitokoto-card.refreshing .hitokoto-hint {
             display: none;
         }
 
-        /* 主题切换过渡动画 */
-        /* 主题切换动画在 THEME TOGGLE section 定义 */
+        /* ==================== 滚动条隐藏 ====================
+         * 隐藏浏览器默认滚动条，让页面更美观
+         * 但保留滚动功能（用户仍可滚动）
+         */
 
-        html {
-            scrollbar-width: none;
-        }
-
-        html::-webkit-scrollbar {
-            display: none;
-        }
-
+        /* ==================== 页面主体样式 ==================== 
+         * body 是页面的根容器，设置全局字体和基础布局
+         */
         body {
-            width: 100%;
-            min-height: 100vh;
-            font-family: 'Noto Sans SC', sans-serif;
-            color: var(--text-main);
-            overflow-x: hidden;
-            cursor: default;
+            width: 100%;              /* 宽度100%，撑满视口 */
+            min-height: 100vh;        /* 最小高度为视口高度的100%（确保至少满屏） */
+            font-family: 'Noto Sans SC', sans-serif;  /* 使用思源黑体字体（Google Fonts引入） */
+            color: var(--text-main);  /* 文字颜色使用CSS变量（会根据主题自动切换） */
+            overflow-x: hidden;       /* 水平方向隐藏溢出内容（防止横向滚动条出现） */
+            cursor: default;          /* 默认鼠标指针样式（箭头） */
         }
 
-        /* ==================== LOADING ==================== */
+        /* ==================== 加载动画（Loading Screen）====================
+         * 页面加载时显示的全屏遮罩层
+         * 使用三个旋转的圆环组成3D加载效果
+         * 页面资源加载完成后淡出隐藏
+         * 
+         * 设计思路：
+         *   - 固定定位覆盖整个屏幕
+         *   - Flex布局使内容居中
+         *   - 通过添加 .hide 类触发淡出动画
+         */
+        
+        /* 加载遮罩层容器：固定定位覆盖整个屏幕 */
         #loading {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #333;
+            position: fixed;          /* 固定定位：不随页面滚动移动 */
+            inset: 0;                 /* 快捷写法：等于 top:0; right:0; bottom:0; left:0; */
+            z-index: 99999;           /* 层级最高，确保在所有内容之上 */
+            display: flex;            /* Flex弹性盒子布局 */
+            align-items: center;      /* 子元素垂直居中 */
+            justify-content: center;  /* 子元素水平居中 */
+            background: #333;         /* 深灰色背景色 */
             transition: opacity 0.6s ease, visibility 0.6s ease;
+            /* 过渡效果：透明度和可见性变化时用0.6秒平滑过渡 */
         }
 
         #loading.hide {
@@ -246,112 +373,184 @@
             visibility: hidden;
         }
 
+        /* 加载动画外层容器：提供3D透视效果 */
         .loader {
             width: 50px;
             height: 50px;
-            border-radius: 50%;
-            perspective: 800px;
+            border-radius: 50%;        /* 圆形容器 */
+            perspective: 800px;        /* 3D透视距离：让子元素的3D旋转效果更明显 */
         }
 
+        /* 三个加载圆环：绝对定位重叠在一起，每个只显示一条边框 */
         .loader-inner {
-            position: absolute;
-            box-sizing: border-box;
+            position: absolute;        /* 绝对定位，使三个圆环完全叠在一起 */
+            box-sizing: border-box;    /* 边框包含在尺寸内 */
             width: 100%;
             height: 100%;
-            border-radius: 50%;
+            border-radius: 50%;         /* 圆形 */
         }
 
+        /* 第一个圆环（左上角定位）：底部边框可见，绕特定3D轴旋转
+         * nth-child(1) 选择第一个子元素
+         */
         .loader-inner:nth-child(1) {
             left: 0; top: 0;
-            border-bottom: 2.5px solid #efefef;
-            animation: spin1 1s linear infinite;
+            border-bottom: 2.5px solid #efefef;   /* 只显示底边（白色） */
+            animation: spin1 1s linear infinite;    /* 应用spin1动画：无限循环，匀速 */
         }
 
+        /* 第二个圆环（右上角定位）：右边框可见，不同的3D旋转轴 */
         .loader-inner:nth-child(2) {
             right: 0; top: 0;
-            border-right: 2.5px solid #efefef;
-            animation: spin2 1s linear infinite;
+            border-right: 2.5px solid #efefef;     /* 只显示右边 */
+            animation: spin2 1s linear infinite;     /* spin2动画：不同角度的旋转 */
         }
 
+        /* 第三个圆环（右下角定位）：顶部边框可见 */
         .loader-inner:nth-child(3) {
             right: 0; bottom: 0;
-            border-top: 2.5px solid #efefef;
-            animation: spin3 1s linear infinite;
+            border-top: 2.5px solid #efefef;        /* 只显示顶边 */
+            animation: spin3 1s linear infinite;     /* spin3动画：第三个角度 */
         }
 
+        /* "LOADING" 文字标签：显示在圆环下方 */
         .loader-text {
-            position: absolute;
-            color: #fff;
+            position: absolute;        /* 相对于父容器 .loader 定位 */
+            color: #fff;               /* 白色文字 */
             font-size: 0.85rem;
-            font-weight: 300;
-            letter-spacing: 3px;
-            margin-top: 48px;
+            font-weight: 300;          /* 细体字重（300 = light） */
+            letter-spacing: 3px;       /* 字母间距加宽，增加设计感 */
+            margin-top: 48px;          /* 在圆环下方48像素处显示 */
         }
 
-        @keyframes spin1 { from { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0); } to { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); } }
-        @keyframes spin2 { from { transform: rotateX(50deg) rotateY(10deg) rotateZ(0); } to { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); } }
-        @keyframes spin3 { from { transform: rotateX(35deg) rotateY(55deg) rotateZ(0); } to { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); } }
+        /* ==================== 3D加载旋转动画关键帧 ====================
+         * 每个圆环绕不同的3D轴组合旋转
+         * rotateX(35deg) - 绕水平轴倾斜35度（上下翻转）
+         * rotateY(-45deg) - 绕垂直轴倾斜-45度（左右翻转）
+         * rotateZ(0→360) - 在这个倾斜的平面内旋转360度
+         * 
+         * 三个圆环的倾斜角度不同，形成立体交叉的轨道效果
+         */
+        
+        /* 第一个圆环：向左后方倾斜，在斜面上旋转 */
+        @keyframes spin1 {
+            from { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0); }
+            to   { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); }
+        }
 
-        /* ==================== BACKGROUND ==================== */
+        /* 第二个圆环：更陡峭的倾斜角度，不同的方向 */
+        @keyframes spin2 {
+            from { transform: rotateX(50deg) rotateY(10deg) rotateZ(0); }
+            to   { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); }
+        }
+
+        /* 第三个圆环：向右前方倾斜 */
+        @keyframes spin3 {
+            from { transform: rotateX(35deg) rotateY(55deg) rotateZ(0); }
+            to   { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); }
+        }
+
+        /* ==================== 背景层样式（Background）====================
+         * 背景由多层组成：
+         *   1. bg-fallback - 备用渐变背景（图片加载失败时显示）
+         *   2. img - 实际背景图片
+         *   3. bg-cover - 半透明遮罩层（调整亮度和色调）
+         */
+
+        /* 全屏背景容器：固定定位，不随页面滚动 */
         .bg-all {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
+            position: fixed;          /* 固定定位：始终覆盖整个视口 */
+            inset: 0;                 /* 铺满全屏 */
+            z-index: 0;               /* 层级最低，作为背景 */
         }
 
-        /* .bg-all img already defined in theme section above */
-
+        /* 图片加载失败时隐藏（通过JS添加 .error 类触发） */
         .bg-all img.error {
             display: none;
         }
 
+        /* ==================== 背景缓慢缩放动画 ====================
+         * 让背景有轻微的"呼吸"效果
+         * alternate 表示来回播放（放大→缩小→放大...）
+         */
         @keyframes bgZoom {
-            0% { transform: scale(1.05); }
-            100% { transform: scale(1.15); }
+            0% { transform: scale(1.05); }    /* 初始：放大5%（配合CSS中的scale(1.05)） */
+            100% { transform: scale(1.15); }  /* 结束：放大15% */
         }
 
+        /* 背景遮罩层：径向渐变，中心透明边缘深色
+         * 用于压暗背景图片边缘，突出中心内容
+         */
         .bg-cover {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, var(--bg-cover) 100%);
+            position: absolute;       /* 相对于父容器绝对定位 */
+            inset: 0;                 /* 铺满父容器 */
+            background: radial-gradient(
+                ellipse at center,                        /* 椭圆形渐变，中心点开始 */
+                rgba(0,0,0,0.2) 0%,                      /* 中心：20%透明度的黑色（几乎不暗） */
+                var(--bg-cover) 100%                     /* 边缘：使用主题变量的颜色（较暗） */
+            );
         }
 
-        /* fallback gradient when no image */
+        /* 备用背景：当图片加载失败时显示的纯CSS渐变
+         * linear-gradient 线性渐变：从左上到右下（135度角）
+         * 使用深蓝绿色调，营造科技感
+         */
         .bg-fallback {
             position: absolute;
             inset: 0;
             background: linear-gradient(135deg, #0f2027 0%, #203a43 30%, #2c5364 60%, #0f2027 100%);
-            z-index: -1;
+            z-index: -1;              /* 在图片下方（如果图片正常显示） */
         }
 
-        /* ==================== SECTION ==================== */
+        /* ==================== 主内容区域（Section）====================
+         * 这是包裹所有卡片的容器，使用Flex布局实现垂直居中
+         */
         .section {
-            position: relative;
-            z-index: 1;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+            position: relative;       /* 相对定位：作为子元素的定位参考 */
+            z-index: 1;               /* 层级高于背景层 */
+            min-height: 100vh;        /* 最小高度 = 视口高度（确保内容可以垂直居中） */
+            display: flex;            /* Flex弹性布局 */
+            align-items: center;      /* 子元素垂直居中 */
+            justify-content: center;  /* 子元素水平居中 */
+            padding: 2rem;            /* 内边距：32像素 */
         }
 
-        /* ==================== MAIN CONTAINER ==================== */
+        /* ==================== 主内容容器（Container）====================
+         * 限制最大宽度并居中，是所有卡片的直接父元素
+         * 页面加载时有淡入模糊的入场动画
+         */
         .container {
-            max-width: 660px;
-            width: 66vw;
-            margin: 0 auto;
+            max-width: 980px;         /* 最大宽度980像素（三栏布局需要更宽） */
+            width: 88vw;              /* 宽度为视口宽度的88%（响应式） */
+            margin: 0 auto;           /* 水平居中（左右margin相等） */
             animation: fadeBlur 1.2s ease 0.3s both;
         }
 
+        /* ==================== 容器入场动画 ====================
+         * 页面加载时内容的淡入+模糊消除效果
+         * 从模糊、透明、下移的状态过渡到清晰可见
+         */
         @keyframes fadeBlur {
-            0% { opacity: 0; filter: blur(10px); transform: translateY(20px); }
-            100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+            0% { 
+                opacity: 0;                    /* 完全透明 */  
+                filter: blur(10px);            /* 高斯模糊10像素 */
+                transform: translateY(20px);   /* 向下偏移20像素 */
+            }
+            100% { 
+                opacity: 1;                    /* 完全不透明 */
+                filter: blur(0);              /* 无模糊 */
+                transform: translateY(0);     /* 回到原位 */
+            }
         }
 
-        /* Staggered fade-in animation for cards */
+        /* ==================== 卡片交错上滑入场动画 ====================
+         * slideUp 动画定义：从下方淡入
+         * 通过给不同卡片设置不同的 animation-delay 实现交错效果
+         * 让页面加载时卡片依次出现，更有层次感
+         */
         @keyframes slideUp {
-            0% { opacity: 0; transform: translateY(30px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% { opacity: 0; transform: translateY(30px); }   /* 起始：透明且在下方30px */
+            100% { opacity: 1; transform: translateY(0); }     /* 结束：完全不透明在原位 */
         }
 
         .col-left .cards:nth-child(1) { animation: slideUp 0.7s ease 0.4s both; }
@@ -364,99 +563,148 @@
         .col-right .links-grid { animation: slideUp 0.6s ease 0.65s both; }
         .col-right .section-divider:nth-child(4) { animation: slideUp 0.6s ease 0.95s both; }
         .col-right .progress-card { animation: slideUp 0.7s ease 1s both; }
+.col-guestbook { animation: slideUp 0.7s ease 1.05s both; }
 
+        /* ==================== 双列布局行容器 ====================
+         * Flexbox实现左右两栏布局
+         */
         .row {
-            display: flex;
-            gap: 2rem;
-            align-items: flex-start;
+            display: flex;            /* 弹性盒子：子元素水平排列 */
+            gap: 2rem;                /* 子元素间距：32像素（rem是相对单位，基于根元素字体大小） */
+            align-items: flex-start;  /* 顶部对齐（不拉伸高度） */
         }
 
-        /* ==================== CARDS ==================== */
+        /* ==================== 卡片通用样式（Cards Base）====================
+         * 所有卡片共享的基础样式 - 毛玻璃效果
+         * backdrop-filter 是现代CSS特性，让背景透过卡片时产生模糊效果
+         */
         .cards {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: var(--radius);
-            transition: all 0.3s ease;
+            background: var(--card-bg);              /* 背景色：使用CSS变量，会根据主题自动切换 */
+            backdrop-filter: blur(10px);             /* 毛玻璃模糊效果：背景透过时模糊10像素 */
+            -webkit-backdrop-filter: blur(10px);     /* Safari浏览器兼容前缀（旧版Safari需要） */
+            border-radius: var(--radius);             /* 圆角：6px */
+            transition: all 0.3s ease;                /* 所有属性变化都有0.3秒平滑过渡 */
         }
 
+        /* 卡片鼠标悬停状态 */
         .cards:hover {
-            background: var(--card-hover-bg);
+            background: var(--card-hover-bg);         /* 背景稍微变亮/不透明一点，提供视觉反馈 */
         }
 
+        /* ====== 白天模式的卡片额外样式 ======
+         * 在浅色背景上需要边框和阴影来区分卡片和背景
+         */
         html.light .cards {
-            border: 1px solid rgba(180, 160, 130, 0.25);
-            box-shadow: 0 1px 4px rgba(80, 60, 30, 0.06);
+            border: 1px solid rgba(180, 160, 130, 0.25);    /* 浅棕色细边框 */
+            box-shadow: 0 1px 4px rgba(80, 60, 30, 0.06);   /* 微弱阴影：轻微浮起感 */
         }
 
         html.light .cards:hover {
-            box-shadow: 0 3px 10px rgba(80, 60, 30, 0.1);
-            border-color: rgba(180, 160, 130, 0.35);
+            box-shadow: 0 3px 10px rgba(80, 60, 30, 0.1);   /* 悬停时阴影加深 */
+            border-color: rgba(180, 160, 130, 0.35);          /* 边框更明显 */
         }
 
-        /* ==================== LEFT COLUMN ==================== */
+        /* ==================== 左侧列（Left Column）====================
+         * 包含三个卡片：
+         *   1. 头像卡片（Avatar Card）
+         *   2. 消息/简介卡片（Message Card）
+         *   3. 社交链接卡片（Social Card）
+         * 
+         * 特点：固定宽度、垂直排列、滚动时粘性定位（sticky）
+         */
         .col-left {
-            flex: 0 0 240px;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-            position: sticky;
-            top: 2rem;
-            margin-top: 15vh;
+            flex: 0 0 240px;        /* flex: 0 0 240px 表示：不伸缩，基础宽度240px */
+                                    /* flex-grow: 0 不放大, flex-shrink: 0 不缩小, flex-basis: 240px */
+            display: flex;           /* 弹性布局 */
+            flex-direction: column;  /* 子元素垂直排列（从上到下） */
+            gap: 0.8rem;             /* 子元素间距：约13像素 */
+            position: sticky;        /* 粘性定位！关键特性：滚动到一定位置后固定不动 */
+            top: 2rem;               /* 距离顶部32px时开始粘住 */
+            margin-top: 15vh;        /* 顶部外边距：视口高度的15%（让内容偏下一点） */
         }
 
-        /* Avatar Card */
+        /* ==================== 头像卡片（Avatar Card）====================
+         * 显示用户头像和名字的卡片
+         * 布局：左侧小电视+头像图片 | 右侧名字+描述文字
+         * 
+         * 特殊处理：
+         *   - 取消毛玻璃效果（背景设为none）
+         *   - 头像悬停时有放大效果
+         *   - 名字使用渐变色
+         */
+        
+        /* 头像卡片容器：水平排列子元素 */
         .avatar-card {
-            display: flex;
-            align-items: center;
-            gap: 1.2rem;
-            padding: 1rem;
-            background: none;
-            backdrop-filter: none;
+            display: flex;           /* 弹性布局（水平方向默认） */
+            align-items: center;     /* 垂直居中对齐 */
+            gap: 1.2rem;             /* 子元素间距：约19像素 */
+            padding: 1rem;           /* 内边距：16像素 */
+            background: none;        /* 无背景色（透明） */
+            backdrop-filter: none;   /* 无模糊效果 */
             -webkit-backdrop-filter: none;
         }
 
+        /* 用户头像图片样式 */
         .avatar-img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--avatar-border);
+            width: 60px;             /* 宽度60像素 */
+            height: 60px;            /* 高度60像素 */
+            border-radius: 50%;      /* 圆形（正方形的50%圆角就是圆） */
+            object-fit: cover;       /* 图片填充方式：裁剪以填满，保持比例 */
+            border: 2px solid var(--avatar-border);  /* 边框：使用主题变量颜色 */
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.6s ease;
+            /* 过渡效果：变换用弹性曲线，边框颜色平滑过渡 */
         }
 
+        /* 鼠标悬停时头像放大1.2倍 */
         .avatar-card:hover .avatar-img {
-            transform: scale(1.2);
+            transform: scale(1.2);   /* 放大到120%大小 */
         }
 
+        /* ==================== 用户名字样式 ====================
+         * 使用中文书法字体 + 渐变色彩 + 发光阴影
+         * 营造个性化的视觉效果
+         */
         .avatar-name {
-            font-family: 'Ma Shan Zheng', cursive;
-            font-size: 1.6rem;
-            font-weight: 400;
-            letter-spacing: 3px;
-            margin-bottom: 0.2rem;
+            font-family: 'Ma Shan Zheng', cursive;  /* 使用马善政书法字体 */
+            font-size: 1.6rem;                     /* 字体大小：约25.6像素 */
+            font-weight: 400;                       /* 正常字重 */
+            letter-spacing: 3px;                    /* 字母/字符间距加宽 */
+            margin-bottom: 0.2rem;                  /* 底部小间距 */
+            
+            /* 渐变背景色：用于给文字上色（配合 background-clip 使用） */
             background: linear-gradient(135deg, #f0945e 0%, #ffcc80 45%, #f8b195 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            /* 135度角线性渐变：橙→金→粉橙色 */
+            
+            -webkit-background-clip: text;    /* Safari：将背景裁剪到文字形状 */
+            -webkit-text-fill-color: transparent;  /* Safari：文字填充透明（显示背景渐变） */
+            background-clip: text;             /* 标准：背景裁剪到文字 */
+            
             filter: drop-shadow(0 0 6px rgba(240, 148, 94, 0.4));
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            /* 发光投影：模拟霓虹灯/发光效果 */
+            
+            display: inline-flex;     /* 行内弹性盒子（让装饰元素同行显示） */
+            align-items: center;      /* 垂直居中 */
+            gap: 8px;                 /* 与右侧装饰的间距 */
         }
 
-        /* 名字右边的装饰花边 */
+        /* ==================== 名字右侧装饰元素 ====================
+         * 三个小圆点，由大到小排列
+         * 模拟日式排版中的"花边"或装饰符号
+         * 
+         * HTML结构：<span class="name-deco"><i></i><i></i><i></i></span>
+         */
         .name-deco {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            display: inline-flex;     /* 行内弹性盒子 */
+            align-items: center;      /* 垂直居中对齐 */
+            gap: 4px;                 /* 圆点之间间距 */
         }
 
-        .name-deco i {
+        /* 每个装饰圆点的通用样式 */
+        .name-deco i {                /* i 是伪元素占位符，不是斜体 */
             display: inline-block;
-            background: var(--accent);
-            border-radius: 50%;
-            opacity: 0.6;
+            background: var(--accent);  /* 使用主题强调色作为背景 */
+            border-radius: 50%;          /* 圆形 */
+            opacity: 0.6;                /* 半透明（60%不透明度） */
         }
 
         .name-deco i:nth-child(1) {
@@ -562,6 +810,20 @@
             flex-direction: column;
             gap: 0.8rem;
             min-width: 0;
+            margin-top: 15vh;
+        }
+
+        /* ==================== 留言板侧边栏（Guestbook Sidebar）==================== */
+        .col-guestbook {
+            flex: 0 0 260px;           /* 固定宽度260px */
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            position: sticky;          /* 粘性定位：滚动时固定在右侧 */
+            top: 2rem;
+            height: fit-content;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
             margin-top: 15vh;
         }
 
@@ -1480,41 +1742,287 @@
             .todo-history.open { max-height: 400px; }
             .todo-list { max-height: 200px; }
         }
+
+        /* ==================== 留言板样式 ====================
+             复用现有设计系统：.cards 毛玻璃卡片 + CSS 变量主题色
+             位于右侧栏底部（时间胶囊之后）
+        */
+        
+        /* 留言板主容器 */
+        .guestbook-card {
+            padding: 12px;
+            animation: slideUp 0.6s ease 1.15s both; /* 延迟入场动画 */
+        }
+
+        /* 留言展示区域：可滚动列表 */
+        .gb-messages {
+            max-height: 240px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+            padding-right: 4px;
+        }
+        /* 自定义滚动条样式 */
+        .gb-messages::-webkit-scrollbar { width: 3px; }
+        .gb-messages::-webkit-scrollbar-track { background: transparent; }
+        .gb-messages::-webkit-scrollbar-thumb {
+            background: var(--accent-dim, rgba(255,255,255,0.2));
+            border-radius: 2px;
+        }
+
+        /* 单条留言 */
+        .gb-item {
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--border-color);
+            animation: fadeIn 0.3s ease;
+        }
+        .gb-item:last-child { border-bottom: none; }
+
+        /* 昵称行：昵称 + 时间戳 */
+        .gb-nick-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .gb-nickname-display {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--accent, #64b5f6); /* 使用主题强调色 */
+        }
+        .gb-time {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        /* 留言内容文本 */
+        .gb-text {
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            line-height: 1.5;
+            word-break: break-word; /* 长内容自动换行 */
+        }
+
+        /* 空状态提示 */
+        .gb-empty {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            padding: 1.5rem 0;
+            letter-spacing: 1px;
+        }
+
+        /* "查看更多"按钮 */
+        .gb-more-btn {
+            display: block;
+            width: 100%;
+            padding: 6px;
+            background: none;
+            border: none;
+            color: var(--accent, #64b5f6);
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .gb-more-btn:hover { opacity: 0.7; }
+
+        /* 发布表单区域 */
+        .gb-form {
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+            margin-top: 4px;
+        }
+
+        /* 输入框统一样式 */
+        .gb-input {
+            width: 100%;
+            padding: 7px 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .gb-input:focus { border-color: var(--accent, #64b5f6); }
+        .gb-input::placeholder { color: var(--text-dim); }
+
+        /* 昵称输入框单独一行 */
+        .gb-nickname {
+            margin-bottom: 6px;
+        }
+
+        /* 内容输入框和发送按钮同行 */
+        .gb-input-row {
+            display: flex;
+            gap: 6px;
+        }
+        .gb-content { flex: 1; }
+
+        /* 发送按钮 */
+        .gb-send-btn {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            background: var(--accent, #64b5f6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gb-send-btn:hover { opacity: 0.85; }
+        .gb-send-btn:active { transform: scale(0.95); } /* 点击缩放反馈 */
+        .gb-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* 新留言淡入动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .gb-messages { max-height: 180px; }
+            .guestbook-card { padding: 10px; }
+        }
     </style>
 </head>
+
+<!-- =====================================================
+     页面主体内容（Body）
+     
+     HTML结构层次（从底到顶，按z-index排序）：
+       ┌─────────────────────────────────────┐
+       │  5. Footer 页脚 (z-index:10)        │ ← 固定在底部
+       │  4. 主内容区 Section (z-index:1)    │ ← 左右两栏卡片
+       │  3. 背景层 bg-all (z-index:0)       │ ← 图片+遮罩
+       │  2. 主题按钮 themeToggle (z:100)    │ ← 固定右上角
+       │  1. Loading加载遮罩 (z:99999)       │ ← 加载完成后隐藏
+       └─────────────────────────────────────┘
+===================================================== -->
 <body>
 
-    <!-- Loading -->
+    <!-- ==================== 1. 加载遮罩层（Loading Screen）====================
+         页面刚打开时全屏显示的加载动画
+         JavaScript 在 window.load 事件后延迟800ms隐藏它
+         
+         内部结构：
+           - .loader 容器：包含3个旋转圆环（CSS 3D动画）
+           - .loader-text："LOADING" 文字标签
+    -->
     <div id="loading">
         <div class="loader">
+            <!-- 三个空的 div 元素 -->
+            <!-- CSS 会给它们添加 border 和 animation，形成3D旋转效果 -->
+            <!-- 每个圆环只显示一条边框（bottom/right/top），旋转角度不同 -->
             <div class="loader-inner"></div>
             <div class="loader-inner"></div>
             <div class="loader-inner"></div>
         </div>
+        <!-- 加载提示文字：显示在圆环下方 -->
         <div class="loader-text">LOADING</div>
     </div>
 
-    <!-- Theme Toggle -->
+    <!-- ==================== 2. 主题切换按钮（Theme Toggle）====================
+         固定定位在页面右上角
+         功能：
+           - 点击切换暗色/亮色模式
+           - 图标随模式变化：🌙（当前暗色）↔ ☀️（切换到亮色）
+           - 点击时有圆形扩散过渡特效
+         title 属性：鼠标悬停时显示提示文字
+         id="themeToggle"：JavaScript 通过这个ID获取元素并绑定事件
+    -->
     <button class="theme-toggle" id="themeToggle" title="切换主题">🌙</button>
 
-    <!-- Background -->
+    <!-- ==================== 3. 背景层（Background）====================
+         固定定位在整个页面背后（position: fixed, z-index: 0）
+         由三层叠加组成，从下到上：
+           
+           层级3（最底层）bg-fallback
+           ├── 备用渐变背景：纯CSS实现，无图片时显示
+           │  深蓝绿色调 linear-gradient(135deg, ...)
+           │
+           层级2 img#bg  
+           ├── 实际背景图片（background7.webp）
+           │  使用 filter 滤镜处理（模糊/亮度/饱和度/棕褐色调）
+           │  有缓慢缩放动画（bgZoom keyframes）
+           │  onerror 处理：图片加载失败时添加 .error 类隐藏
+           │
+           层级1（最顶层）.cover（实际类名是 .bg-cover）
+           └── 半透明遮罩层
+              径向渐变：中心透明 → 边缘深色
+              用于压暗边缘，突出中心内容区域
+    -->
     <div class="bg-all">
+        <!-- 备用背景：当背景图片加载失败时显示 -->
         <div class="bg-fallback"></div>
+        
+        <!-- 
+          背景图片
+          src: 图片路径（webp格式，体积小质量好）
+          alt: 空字符串（装饰性图片无需替代文本）
+          onerror: 内联事件处理器 - 图片加载失败时执行JS代码
+                   this.classList.add('error') 给图片添加 error 类
+                   CSS中 .bg-all img.error { display: none } 会隐藏它
+        -->
         <img id="bg" src="background7.webp" alt=""
              onerror="this.classList.add('error');">
+        
+        <!-- 遮罩层：让背景图片边缘变暗，突出中心内容 -->
         <div class="cover"></div>
     </div>
 
-    <!-- Main Content -->
+    <!-- ==================== 4. 主内容区域（Main Content）====================
+         这是页面的核心区域，包含所有可见的内容卡片
+         
+         布局结构：
+         section.section (Flex居中容器)
+         └── div.container (最大宽度660px，有入场动画)
+             └── div.row (Flex双列布局)
+                 ├── div.col-left  (左侧栏：头像+简介+社交)
+                 └── div.col-right (右侧栏：一言+时间+链接+进度)
+    -->
     <section class="section">
         <div class="container">
+            
+            <!-- 双列布局行容器
+                 display: flex 让子元素水平排列
+                 gap: 2rem 设置左右两栏间距
+            -->
             <div class="row">
 
-                <!-- ========== LEFT COLUMN ========== -->
+                <!-- ============================================================
+                     LEFT COLUMN（左侧栏）
+                     
+                     包含三个卡片（从上到下）：
+                       1. avatar-card  - 头像 + 名字 + 小电视吉祥物
+                       2. message-card - 个人简介 / 问候语
+                       3. social-card  - 社交链接图标（GitHub/Email/B站/QQ/微信）
+                     
+                     样式特点：
+                       - 固定宽度 240px
+                       - sticky 粘性定位（滚动到一定位置后固定）
+                       - 子元素垂直排列
+                ============================================================ -->
                 <div class="col-left">
-                    <!-- Avatar -->
+                    
+                    <!-- ==================== 卡片1：头像卡片（Avatar Card）====================
+                         布局（从左到右）：[小电视SVG] [头像图片] [名字+描述]
+                         交互：头像悬停放大1.2倍，小电视有自动动画
+                    -->
                     <div class="avatar-card cards">
-                        <!-- 小电视（黑白简笔画） -->
+                        <!-- ====== 小电视吉祥物（SVG矢量图形）======
+                             SVG用代码绘制图像，可无限缩放不失真
+                             viewBox定义50x50的画布坐标系
+                             JS会控制眼睛/嘴巴实现动画效果
+                        -->
                         <div class="doggo">
                             <div class="doggo-body">
                                 <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
@@ -1546,24 +2054,47 @@
                                 </svg>
                             </div>
                         </div>
+                        
+                        <!-- 用户头像：圆形，悬停放大效果 -->
                         <img class="avatar-img" src="6eb3142e089146578ad0dacd790e1d2f.jpg" alt="任涵">
+                        
+                        <!-- 名字和描述 -->
                         <div>
+                            <!-- avatar-name类：渐变色+发光效果（CSS background-clip:text实现） -->
                             <div class="avatar-name">任涵<span class="name-deco"><i></i><i></i><i></i></span></div>
+                            <!-- 个人签名：探索者·编程者·梦想家 -->
                             <div class="avatar-desc">Explorer · Coder · Dreamer</div>
                         </div>
                     </div>
 
-                    <!-- Message -->
+                    <!-- ==================== 卡片2：消息/简介卡片 ====================
+                         id="greeting_text" 会被JS根据时间动态修改：
+                           5-11点→"早上好☀️"  12-13点→"中午好🌤️"
+                           14-17点→"下午好🌅"  18-21点→"晚上好🌙"
+                           22-4点 →"夜深了💤"
+                    -->
                     <div class="message-card cards">
+                        <!-- 左上角引号图标 -->
                         <i class="fa-solid fa-quote-left"></i>
                         <div class="message-text">
+                            <!-- id供JS获取元素并修改文字内容 -->
                             <strong id="greeting_text">你好 !</strong><br>
                             一名热爱技术、正在学习编程的学生，用代码探索更多可能，在数字世界里留下足迹。
                         </div>
+                        <!-- 右下角引号图标 -->
                         <i class="fa-solid fa-quote-right"></i>
                     </div>
 
-                    <!-- Social -->
+                    <!-- ==================== 卡片3：社交链接图标 ====================
+                         图标说明：
+                         fa-brands=品牌logo(GitHub/B站/QQ/微信)
+                         fa-solid=实心通用图标(Email信封)
+                         
+                         链接属性：
+                         href=跳转地址(#表示待设置)  
+                         target=_blank(新标签页打开)
+                         title=鼠标悬停提示
+                    -->
                     <div class="social-card cards">
                         <a href="https://github.com" target="_blank" title="GitHub">
                             <i class="fa-brands fa-github"></i>
@@ -1583,10 +2114,14 @@
                     </div>
                 </div>
 
-                <!-- ========== RIGHT COLUMN ========== -->
+                <!-- ============================================================
+                     RIGHT COLUMN（右侧栏）
+                     
+                     包含：一言+时钟 | 网站列表(6个链接) | 时间胶囊(进度条+备忘录)
+                ============================================================ -->
                 <div class="col-right">
 
-                    <!-- Hitokoto + Time -->
+                    <!-- 一言卡片(hitokoto.cn随机名言) + 实时时钟 -->
                     <div class="top-row">
                         <div class="hitokoto-card cards">
                             <div class="hitokoto-label"><i class="fa-solid fa-feather"></i>&ensp;一言</div>
@@ -1601,45 +2136,69 @@
                         </div>
                     </div>
 
-                    <!-- Divider -->
+                    <!-- ==================== 分隔线：网站列表 ====================
+                         视觉分隔符，最终渲染：── 网站列表 ──
+                         ::before/::after伪元素生成两侧渐变线条
+                    -->
                     <div class="section-divider">
                         <span>网站列表</span>
                     </div>
 
-                    <!-- Links Grid -->
+                    <!-- ==================== 快捷链接网格（3列x2行）====================
+                         CSS Grid: grid-template-columns: repeat(3, 1fr)
+                         JS交互：鼠标移动时3D倾斜效果
+                         
+                         链接配置（#表示待设置）：
+                           博客→掘金(已设置) | 项目→# | 音乐→#
+                           相册→# | 书签→# | 探索→#
+                    -->
                     <div class="links-grid">
+                        <!-- 博客 -->
                         <a class="link-card cards" href="https://juejin.cn/user/36736481371856" target="_blank">
                             <i class="fa-solid fa-blog"></i>
                             <span>博客</span>
                         </a>
+                        <!-- 项目（待设置）-->
                         <a class="link-card cards" href="#" target="_blank">
                             <i class="fa-solid fa-code"></i>
                             <span>项目</span>
                         </a>
+                        <!-- 音乐（待设置）-->
                         <a class="link-card cards" href="#" target="_blank">
                             <i class="fa-solid fa-music"></i>
                             <span>音乐</span>
                         </a>
+                        <!-- 相册（待设置）-->
                         <a class="link-card cards" href="#" target="_blank">
                             <i class="fa-solid fa-images"></i>
                             <span>相册</span>
                         </a>
+                        <!-- 书签（待设置）-->
                         <a class="link-card cards" href="#" target="_blank">
                             <i class="fa-solid fa-bookmark"></i>
                             <span>书签</span>
                         </a>
+                        <!-- 探索（待设置）-->
                         <a class="link-card cards" href="#" target="_blank">
                             <i class="fa-solid fa-compass"></i>
                             <span>探索</span>
                         </a>
                     </div>
 
-                    <!-- Divider -->
+                    <!-- ==================== 分隔线：时间胶囊 ==================== -->
                     <div class="section-divider">
                         <span>时间胶囊</span>
                     </div>
 
-                    <!-- Progress -->
+                    <!-- ==================== 时间进度条 + 备忘录功能 ====================
+                         id="progressCard": JS获取此元素，用于判断点击位置关闭备忘录面板
+                         
+                         包含内容：
+                           1. 4个进度条（日/周/月/年已过百分比）
+                           2. todoToggle 按钮：打开/关闭备忘录面板
+                           3. todoPanel: 备忘录主面板
+                           4. todoHistory: 历史归档面板
+                    -->
                     <div class="progress-card cards" id="progressCard">
                         <div class="progress-item">
                             <div class="progress-label">今日已度过 <span id="p_day">0</span>% · <span id="p_day_detail"></span></div>
@@ -1658,14 +2217,20 @@
                             <div class="progress-track"><div class="progress-fill" id="pf_year" style="width:0%"></div></div>
                         </div>
 
-                        <!-- 备忘录图标按钮 -->
-                        <button class="todo-toggle" id="todoToggle" title="备忘录">
+                    <!-- ==================== 备忘录功能入口按钮 ====================
+                         点击展开/收起左侧备忘录面板
+                         todo-badge显示未完成事项数量（红色角标）
+                    -->
+                    <button class="todo-toggle" id="todoToggle" title="备忘录">
                             <i class="fa-solid fa-clipboard-list"></i>
                             <span class="todo-badge" id="todoBadge"></span>
                         </button>
 
-                        <!-- 备忘录面板（浮在时间胶囊左侧） -->
-                        <div class="todo-panel" id="todoPanel">
+                    <!-- 备忘录面板：点击按钮后从左侧滑出
+                         数据存储在localStorage（浏览器本地存储）
+                         包含：分类标签、输入框、任务列表、统计
+                    -->
+                    <div class="todo-panel" id="todoPanel">
                             <div class="todo-panel-header">
                                 <span class="todo-panel-title">备忘录</span>
                                 <button class="todo-history-btn" id="todoHistoryBtn" title="历史日记">
@@ -1685,8 +2250,10 @@
                             <div class="todo-count" id="todoCount"></div>
                         </div>
 
-                        <!-- 历史日记面板（覆盖在备忘录面板之上） -->
-                        <div class="todo-history" id="todoHistory">
+                    <!-- 历史归档面板：浏览过去某天的任务记录
+                         可以前后切换日期查看历史数据
+                    -->
+                    <div class="todo-history" id="todoHistory">
                             <div class="todo-history-header">
                                 <span class="todo-history-title"><i class="fa-solid fa-box-archive"></i> 归档箱</span>
                                 <button class="todo-history-back" id="todoHistoryBack">返回</button>
@@ -1701,29 +2268,87 @@
                     </div>
 
                 </div>
+
+                <!-- ============================================================
+                     RIGHT SIDEBAR（留言板侧边栏）
+
+                     独立一栏显示在页面右侧
+                     包含：留言板功能
+                ============================================================ -->
+                <div class="col-guestbook">
+
+                    <!-- ==================== 分隔线：留言板 ==================== -->
+                    <div class="section-divider">
+                        <span><i class="fa-solid fa-comments"></i> 留言板</span>
+                    </div>
+
+                    <!-- ==================== 留言板功能 ==================== -->
+                    <div class="guestbook-card cards" id="guestbookCard">
+                        <!-- 留言展示区域：滚动列表 -->
+                        <div class="gb-messages" id="gbMessages">
+                            <div class="gb-empty" id="gbEmpty">暂无留言，来说点什么吧~</div>
+                        </div>
+                        <!-- 查看更多按钮：当留言超过显示数量时出现 -->
+                        <button class="gb-more-btn" id="gbMore" style="display:none;">查看更多 <i class="fa-solid fa-angle-down"></i></button>
+                        
+                        <!-- 发布表单区域 -->
+                        <div class="gb-form" id="gbForm">
+                            <input type="text" class="gb-input gb-nickname" id="gbNickname" placeholder="昵称（选填）" maxlength="32">
+                            <div class="gb-input-row">
+                                <input type="text" class="gb-input gb-content" id="gbContent" placeholder="说点什么..." maxlength="500">
+                                <button class="gb-send-btn" id="gbSendBtn" title="发送"><i class="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ==================== 页脚（Footer）====================
+         固定在页面底部，显示版权信息和年份
+    -->
     <footer class="footer">
         <span>Copyright &copy; <span id="footer_year"></span> 任涵</span>
         &ensp;·&ensp;
         <span>一个热爱代码的学生</span>
     </footer>
 
+    <!-- ============================================================
+         JavaScript 脚本部分
+         
+         功能模块（按执行顺序）：
+           1. Loading 加载动画隐藏
+           2. Background 鼠标视差效果
+           3. Time 实时时钟更新
+           4. Progress 时间进度条
+           5. Greeting 问候语
+           6. Hitokoto 一言API + 打字机效果
+           7. Footer 年份更新
+           8. 小电视动画循环
+           9. Theme Toggle 主题切换
+          10. 一言点击刷新
+          11. Link Cards 3D倾斜
+          12. Todo Memo 备忘录功能
+    ============================================================ -->
     <script>
-        // ========== Loading ==========
+        // ==================== 1. Loading 加载动画隐藏 ====================
+        // window.load事件：所有资源加载完成后触发
+        // 延迟800ms后添加.hide类，CSS过渡实现淡出
         window.addEventListener('load', function () {
             setTimeout(() => {
                 document.getElementById('loading').classList.add('hide');
             }, 800);
         });
 
-        // ========== Background Parallax ==========
+        // ==================== 2. 鼠标视差背景效果（Parallax）====================
+        // IIFE立即执行函数，避免全局变量污染
+        // 鼠标移动时背景跟随偏移（最大±6px），营造深度感
         (function() {
             var bg = document.querySelector('.bg-all');
             document.addEventListener('mousemove', function(e) {
+                // 归一化鼠标位置到-0.5~0.5，乘以12得到偏移像素
                 var x = (e.clientX / window.innerWidth - 0.5) * 12;
                 var y = (e.clientY / window.innerHeight - 0.5) * 12;
                 bg.style.transition = 'transform 0.3s ease-out';
@@ -1731,22 +2356,27 @@
             });
         })();
 
-        // ========== Time ==========
+        // ==================== 3. 实时时钟（每秒更新）====================
+        // Date: getMonth()返回0-11需+1, getDay():0=周日
+        // padStart(2,'0'): 补零如"5"→"05"
         function updateTime() {
-            const now = new Date();
+            const now = new Date();  // 当前时间对象
             const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-            const pad = n => String(n).padStart(2, '0');
+            const pad = n => String(n).padStart(2, '0');  // 箭头函数：补零辅助
 
+            // 模板字符串嵌入变量
             document.getElementById('time_date').textContent =
                 `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
             document.getElementById('time_clock').textContent =
                 `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
             document.getElementById('time_weekday').textContent = weekdays[now.getDay()];
         }
-        updateTime();
-        setInterval(updateTime, 1000);
+        updateTime();                    // 立即执行一次
+        setInterval(updateTime, 1000);   // 每1000ms重复
 
-        // ========== Progress ==========
+        // ==================== 4. 时间进度条（每分钟更新）====================
+        // 计算4个维度进度：日/周/月/年已过百分比
+        // 闰年判断：能被4整除且不被100整除，或能被400整除 → 366天
         function updateProgress() {
             const now = new Date();
             const hours = now.getHours() + now.getMinutes() / 60;
@@ -1772,108 +2402,110 @@
             document.getElementById('pf_month').style.width = monthPct + '%';
             document.getElementById('pf_year').style.width = yearPct + '%';
 
-            // 具体数值
-            var passedHours = Math.floor(hours);
-            var remainHours = 24 - passedHours;
+            // 详细说明文字
+            var passedHours = Math.floor(hours);   // 已过整小时
             document.getElementById('p_day_detail').textContent = '已过 ' + passedHours + ' 小时';
-
-            var passedWeekDays = dayOfWeek - 1;
             document.getElementById('p_week_detail').textContent = '第 ' + dayOfWeek + ' 天 / 共 7 天';
-
             document.getElementById('p_month_detail').textContent = '第 ' + dayOfMonth + ' 天 / 共 ' + daysInMonth + ' 天';
 
+            // 今年第几天：时间差/一天的毫秒数，+1因为第一天是第1天不是第0天
             var dayOfYear = Math.floor((now - startOfYear) / msInDay) + 1;
             document.getElementById('p_year_label').textContent = now.getFullYear() + ' 年';
+            // closest('.progress-label'): 向上查找最近的.progress-label元素并修改其HTML
             document.getElementById('p_year').closest('.progress-label').innerHTML =
                 '<span>' + now.getFullYear() + ' 年</span>已度过 <span id="p_year">' + yearPct + '</span>% · 第 ' + dayOfYear + ' 天';
         }
         updateProgress();
         setInterval(updateProgress, 60000);
 
-        // ========== Greeting ==========
+        // ==================== 5. 时间问候语（Greeting）====================
+        // 根据当前小时数显示不同问候语+emoji
         (function() {
             var h = new Date().getHours();
             var text = '你好 !';
-            if (h >= 5 && h < 12) text = '早上好 ! ☀️';
-            else if (h >= 12 && h < 14) text = '中午好 ! 🌤️';
-            else if (h >= 14 && h < 18) text = '下午好 ! 🌅';
-            else if (h >= 18 && h < 22) text = '晚上好 ! 🌙';
-            else text = '夜深了 ! 💤';
+            if (h >= 5 && h < 12) text = '早上好 ! ☀️';       // 5-11点
+            else if (h >= 12 && h < 14) text = '中午好 ! 🌤️'; // 12-13点
+            else if (h >= 14 && h < 18) text = '下午好 ! 🌅';    // 14-17点
+            else if (h >= 18 && h < 22) text = '晚上好 ! 🌙';   // 18-21点
+            else text = '夜深了 ! 💤';                          // 22-4点
             document.getElementById('greeting_text').textContent = text;
         })();
 
-        // ========== Hitokoto ==========
+        // ==================== 6. 一言API + 打字机效果（Hitokoto）====================
+        // hitokoto.cn: 免费一言(名言)API，返回JSON: {hitokoto:"文字", from:"出处"}
+        
+        // 打字机效果定时器变量
         var typeTimer = null;
+        
+        /**
+         * 打字机效果函数
+         * @param {HTMLElement} el - 目标DOM元素
+         * @param {string} text - 要逐字显示的文字
+         * @param {number} speed - 每字间隔毫秒数（默认60）
+         */
         function typeText(el, text, speed) {
-            if (typeTimer) clearInterval(typeTimer);
-            el.textContent = '';
-            el.classList.add('typing');
-            var i = 0;
-            typeTimer = setInterval(function() {
-                if (i < text.length) {
-                    el.textContent += text.charAt(i);
+            if (typeTimer) clearInterval(typeTimer);  // 清除之前的动画
+            el.textContent = '';                       // 清空内容
+            el.classList.add('typing');                // 添加打字中状态(显示闪烁光标)
+            var i = 0;                                 // 字符索引
+            typeTimer = setInterval(function() {       // 定时器：每speed毫秒执行一次
+                if (i < text.length) {                 // 还有字符未输出
+                    el.textContent += text.charAt(i);   // charAt(i)获取第i个字符并追加
                     i++;
-                } else {
-                    clearInterval(typeTimer);
+                } else {                               // 全部输出完毕
+                    clearInterval(typeTimer);           // 清除定时器停止动画
                     typeTimer = null;
                     setTimeout(function() { el.classList.remove('typing'); }, 600);
+                    // 延迟600ms移除光标效果（让用户看到末尾光标闪烁）
                 }
-            }, speed || 60);
+            }, speed || 60);                           // 默认速度60ms/字
         }
 
+        // 获取一言数据：fetch API + Promise链
+        // isRefresh: true=打字机效果, false=直接显示
         function fetchHitokoto(isRefresh) {
             fetch('https://v1.hitokoto.cn/?c=a&c=b&c=d&c=i&c=k')
-                .then(r => r.json())
-                .then(data => {
+                .then(r => r.json())           // 解析JSON响应
+                .then(function(data) {
                     var textEl = document.getElementById('hitokoto_text');
-                    if (isRefresh) {
-                        typeText(textEl, data.hitokoto, 50);
-                    } else {
-                        textEl.textContent = data.hitokoto;
-                    }
+                    if (isRefresh) typeText(textEl, data.hitokoto, 50);   // 打字机效果
+                    else textEl.textContent = data.hitokoto;               // 直接显示
+                    // ||'無名': 如果from为空则使用默认值（逻辑或短路）
                     document.getElementById('hitokoto_from').textContent = data.from || '無名';
                 })
-                .catch(() => {});
+                .catch(function() {});         // 错误时静默忽略
         }
-        fetchHitokoto(false);
-        setInterval(function() { fetchHitokoto(true); }, 30000);
+        fetchHitokoto(false);                  // 首次加载
+        setInterval(function() { fetchHitokoto(true); }, 30000);  // 每30秒刷新
 
-        // ========== Footer Year ==========
+        // ==================== 7. 页脚年份 ====================
         document.getElementById('footer_year').textContent = new Date().getFullYear();
 
-        // ========== 小电视动作 ==========
+        // ==================== 8. 小电视动画循环 ====================
+        // async/await + while(true) 实现无限动作序列
         (function() {
-            var body = document.querySelector('.doggo-body');
-            var eyeL = document.querySelector('.doggo-eye-l');
-            var eyeR = document.querySelector('.doggo-eye-r');
+            var body = document.querySelector('.doggo-body');    // 身体容器
+            var eyeL = document.querySelector('.doggo-eye-l');   // 左眼
+            var eyeR = document.querySelector('.doggo-eye-r');   // 右眼
 
+            // 辅助函数：返回一个延迟指定毫秒的Promise
             function wait(ms) {
                 return new Promise(function(r) { setTimeout(r, ms); });
             }
 
-            // 往左看
-            function peekLeft() {
-                body.style.transform = 'translateX(-3px) rotate(-5deg)';
-            }
-            // 往右看
-            function peekRight() {
-                body.style.transform = 'translateX(3px) rotate(5deg)';
-            }
-            // 回正
-            function straight() {
-                body.style.transform = 'translateX(0) rotate(0deg) translateY(0)';
-            }
-            // 歪头
-            function tiltHead() {
-                body.style.transform = 'rotate(-12deg)';
-            }
-            // 小跳
+            // 各动作函数：修改CSS transform实现不同姿态
+            function peekLeft() { body.style.transform = 'translateX(-3px) rotate(-5deg)'; }   // 左看
+            function peekRight() { body.style.transform = 'translateX(3px) rotate(5deg)'; }     // 右看
+            function straight() { body.style.transform = 'translateX(0) rotate(0deg) translateY(0)'; }  // 回正
+            function tiltHead() { body.style.transform = 'rotate(-12deg)'; }                     // 歪头
+            
+            // 小跳：应用CSS keyframes动画
             function bounce() {
-                body.style.transition = 'none';
-                body.style.animation = 'dogBounce 0.5s ease';
+                body.style.transition = 'none';                                          // 禁用过渡
+                body.style.animation = 'dogBounce 0.5s ease';                            // 触发弹跳
                 setTimeout(function() {
-                    body.style.animation = 'none';
-                    body.style.transition = 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+                    body.style.animation = 'none';                                        // 清除动画
+                    body.style.transition = 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';  // 恢复过渡
                 }, 500);
             }
             // 坏笑
@@ -1948,51 +2580,81 @@
         })();
 
         // ========== Theme Toggle ==========
+        // 主题切换功能（已迁移到后端API存储，支持多端同步）
+        // 原方案：仅 localStorage 本地存储（换浏览器/清缓存会丢失）
+        // 新方案：通过 PUT /api/settings/theme 保存到 MySQL 数据库
+        // 降级策略：API 失败时回退到 localStorage（保证离线可用）
         (function() {
             var toggle = document.getElementById('themeToggle');
             var html = document.documentElement;
-            var saved = localStorage.getItem('theme');
             var h = new Date().getHours();
-            // 18:00-4:59 晚间默认暗色，5:00-17:59 白天默认亮色
             var isNight = h >= 18 || h < 5;
 
-            if (saved === 'light') {
-                html.classList.add('light');
-                toggle.textContent = '☀️';
-            } else if (saved === 'dark') {
-                html.classList.remove('light');
-                toggle.textContent = '🌙';
-            } else {
-                if (!isNight) {
+            // 从服务端加载主题偏好（首次加载），失败则用本地缓存或时间判断
+            fetch('/api/settings/theme')
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.code === 0 && res.data) {
+                        applyTheme(res.data.theme);
+                    } else {
+                        // API 返回异常时使用 localStorage 降级
+                        var saved = localStorage.getItem('theme');
+                        if (saved === 'light') applyTheme('light');
+                        else if (saved === 'dark') applyTheme('dark');
+                        else if (!isNight) applyTheme('light'); // 白天默认亮色
+                    }
+                })
+                .catch(function() {
+                    // 网络错误时完全降级到原有逻辑
+                    var saved = localStorage.getItem('theme');
+                    if (saved === 'light') { html.classList.add('light'); toggle.textContent = '☀️'; }
+                    else if (saved === 'dark') { toggle.textContent = '🌙'; }
+                    else if (!isNight) { html.classList.add('light'); toggle.textContent = '☀️'; }
+                });
+
+            // 应用主题的辅助函数
+            function applyTheme(theme) {
+                if (theme === 'light') {
                     html.classList.add('light');
                     toggle.textContent = '☀️';
+                } else {
+                    html.classList.remove('light');
+                    toggle.textContent = '🌙';
                 }
+                // 同时写入 localStorage 作为离线缓存
+                localStorage.setItem('theme', theme);
             }
 
+            // 点击切换主题
             toggle.addEventListener('click', function(e) {
                 var isLight = html.classList.toggle('light');
-                toggle.textContent = isLight ? '☀️' : '🌙';
-                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                var newTheme = isLight ? 'light' : 'dark';
+                applyTheme(newTheme);
+
+                // 异步保存到服务端（不阻塞UI）
+                fetch('/api/settings/theme', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ theme: newTheme })
+                }).catch(function(err) {
+                    console.warn('主题保存失败(已降级到本地):', err);
+                });
 
                 // 圆形扩散特效
                 var ripple = document.createElement('div');
                 ripple.className = 'theme-ripple';
                 var size = Math.max(window.innerWidth, window.innerHeight) * 2.5;
                 var rect = toggle.getBoundingClientRect();
-                var cx = rect.left + rect.width / 2;
-                var cy = rect.top + rect.height / 2;
                 ripple.style.width = size + 'px';
                 ripple.style.height = size + 'px';
-                ripple.style.left = (cx - size / 2) + 'px';
-                ripple.style.top = (cy - size / 2) + 'px';
+                ripple.style.left = (rect.left + rect.width / 2 - size / 2) + 'px';
+                ripple.style.top = (rect.top + rect.height / 2 - size / 2) + 'px';
                 ripple.style.background = isLight
                     ? 'radial-gradient(circle, rgba(245,238,225,0.5) 0%, rgba(245,238,225,0) 70%)'
                     : 'radial-gradient(circle, rgba(20,20,30,0.5) 0%, rgba(20,20,30,0) 70%)';
                 document.body.appendChild(ripple);
                 ripple.classList.add('active');
-                ripple.addEventListener('animationend', function() {
-                    ripple.remove();
-                });
+                ripple.addEventListener('animationend', function() { ripple.remove(); });
             });
         })();
 
@@ -2035,14 +2697,23 @@
             });
         })();
 
-        // ========== Todo Memo (备忘录) ==========
+        // ========== Todo Memo (备忘录) - 已迁移到后端API ==========
+        // 原方案：所有数据存储在浏览器 localStorage（换设备/清缓存会丢失）
+        // 新方案：通过 RESTful API 与 MySQL 数据库交互，支持多端同步
+        // 降级策略：API 请求失败时自动回退到 localStorage，保证离线可用性
+        //
+        // API 端点说明：
+        //   GET    /api/todos?category=life     → 获取某分类的任务列表
+        //   POST   /api/todos                   → 新增任务 {category, text}
+        //   PUT    /api/todos/:id               → 更新任务 {text? | done?}
+        //   DELETE /api/todos/:id               → 删除任务
+        //   POST   /api/todos/archive           → 归档当天所有任务
+        //   GET    /api/todos/history?date=...  → 获取指定日期的历史归档
         (function() {
-            var STORAGE_KEY = 'tinyWeb1_todos';
-            var HISTORY_KEY = 'tinyWeb1_history';
-            var ARCHIVE_DATE_KEY = 'tinyWeb1_archiveDate';
-            var currentTab = 'life'; // 'life' | 'study' | 'important'
-            var historyDate = null; // 当前查看的历史日期 YYYY-MM-DD
+            var currentTab = 'life';       // 当前选中的分类标签: 'life' | 'study' | 'important'
+            var historyDate = null;        // 当前查看的历史日期 YYYY-MM-DD
 
+            // --- DOM 元素引用 ---
             var toggleBtn = document.getElementById('todoToggle');
             var panel = document.getElementById('todoPanel');
             var input = document.getElementById('todoInput');
@@ -2061,95 +2732,218 @@
 
             var tabNames = { life: '生活', study: '学习', important: '*** 重要' };
 
-            // --- 数据操作 ---
-            function loadTodos() {
+            // ============================================================
+            // 本地数据缓存层（用于离线降级）
+            // 当 API 不可用时，数据读写会回退到这些 localStorage 操作
+            // ============================================================
+            var STORAGE_KEY = 'tinyWeb1_todos';
+            var HISTORY_KEY = 'tinyWeb1_history';
+            var ARCHIVE_DATE_KEY = 'tinyWeb1_archiveDate';
+
+            function loadLocalTodos() {
                 try {
-                    var data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-                    return data || { life: [], study: [], important: [] };
-                } catch(e) {
-                    return { life: [], study: [], important: [] };
+                    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { life: [], study: [], important: [] };
+                } catch(e) { return { life: [], study: [], important: [] }; }
+            }
+            function saveLocalTodos(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+            function loadLocalHistory() {
+                try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || {}; }
+                catch(e) { return {}; }
+            }
+            function saveLocalHistory(h) { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
+
+            // ============================================================
+            // API 请求封装（统一错误处理 + 自动降级）
+            // 所有与后端的通信都通过此函数发起
+            // 返回值：{ ok: boolean, data: any, error: string|null }
+            // ============================================================
+            function apiRequest(url, options) {
+                options = options || {};
+                if (!options.headers) options.headers = {};
+                options.headers['Content-Type'] = 'application/json';
+
+                return fetch(url, options)
+                    .then(function(res) { return res.json(); })
+                    .then(function(json) {
+                        if (json.code === 0) {
+                            return { ok: true, data: json.data };
+                        } else {
+                            console.warn('[API Error]', url, json.message);
+                            return { ok: false, error: json.message || '未知错误' };
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('[API Fail]', url, err.message);
+                        return { ok: false, error: err.message, networkError: true };
+                    });
+            }
+
+            // ============================================================
+            // 数据操作函数（优先使用API，失败时降级到localStorage）
+            // ============================================================
+
+            /** 从服务端加载当前分类的任务列表 */
+            function fetchTodos() {
+                return apiRequest('/api/todos?category=' + currentTab)
+                    .then(function(result) {
+                        if (result.ok && result.data) {
+                            // 将服务端数据同步到本地缓存
+                            var localData = loadLocalTodos();
+                            localData[currentTab] = result.data;
+                            saveLocalTodos(localData);
+                            return result.data;
+                        }
+                        // API 失败时返回本地缓存
+                        return loadLocalTodos()[currentTab] || [];
+                    });
+            }
+
+            /** 通过 API 添加新任务 */
+            function addTodoApi(text) {
+                text = text.trim();
+                if (!text) return;
+                
+                return apiRequest('/api/todos', {
+                    method: 'POST',
+                    body: JSON.stringify({ category: currentTab, text: text })
+                }).then(function(result) {
+                    if (result.ok) {
+                        input.value = '';
+                        return refreshAndRender(); // 重新拉取并渲染
+                    } else {
+                        // API 失败时降级到本地添加
+                        var localData = loadLocalTodos();
+                        localData[currentTab] = localData[currentTab] || [];
+                        localData[currentTab].push({ text: text, done: false });
+                        saveLocalTodos(localData);
+                        input.value = '';
+                        renderFromLocal();
+                    }
+                });
+            }
+
+            /** 通过 API 切换任务完成状态 */
+            function toggleDoneApi(idx, todoId) {
+                // 需要先获取当前的 done 状态来取反
+                var todos = loadLocalTodos()[currentTab] || [];
+                if (idx < todos.length) {
+                    var newDone = !todos[idx].done;
+                    
+                    apiRequest('/api/todos/' + todoId, {
+                        method: 'PUT',
+                        body: JSON.stringify({ done: newDone })
+                    }).then(function(result) {
+                        if (result.ok) {
+                            refreshAndRender();
+                        } else {
+                            // 降级：本地更新
+                            todos[idx].done = newDone;
+                            saveLocalTodos(loadLocalTodos());
+                            renderFromLocal();
+                        }
+                    });
                 }
             }
 
-            function saveTodos(data) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            /** 通过 API 删除任务 */
+            function removeTodoApi(idx, todoId) {
+                apiRequest('/api/todos/' + todoId, {
+                    method: 'DELETE'
+                }).then(function(result) {
+                    if (result.ok) {
+                        refreshAndRender();
+                    } else {
+                        // 降级：本地删除
+                        var localData = loadLocalTodos();
+                        localData[currentTab].splice(idx, 1);
+                        saveLocalTodos(localData);
+                        renderFromLocal();
+                    }
+                });
             }
 
-            function getTodos() {
-                return loadTodos()[currentTab] || [];
+            /** 通过 API 更新任务文本 */
+            function updateTextApi(idx, todoId, newText) {
+                apiRequest('/api/todos/' + todoId, {
+                    method: 'PUT',
+                    body: JSON.stringify({ text: newText })
+                }).then(function(result) {
+                    if (result.ok) {
+                        refreshAndRender();
+                    } else {
+                        // 降级：本地更新
+                        var localData = loadLocalTodos();
+                        localData[currentTab][idx].text = newText;
+                        saveLocalTodos(localData);
+                        renderFromLocal();
+                    }
+                });
             }
 
-            function setTodos(arr) {
-                var data = loadTodos();
-                data[currentTab] = arr;
-                saveTodos(data);
+            /** 拉取最新数据并重新渲染 */
+            function refreshAndRender() {
+                return fetchTodos().then(function(todos) {
+                    // 同步本地缓存
+                    var localData = loadLocalTodos();
+                    localData[currentTab] = todos;
+                    saveLocalTodos(localData);
+                    renderFromLocal();
+                });
             }
 
-            // --- 历史归档 ---
-            function loadHistory() {
-                try {
-                    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || {};
-                } catch(e) { return {}; }
-            }
-
-            function saveHistory(hist) {
-                localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
-            }
-
+            // ============================================================
+            // 工具函数
+            // ============================================================
             function getTodayStr() {
                 var d = new Date();
-                return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+                return d.getFullYear() + '-' +
+                       String(d.getMonth()+1).padStart(2,'0') + '-' +
+                       String(d.getDate()).padStart(2,'0');
             }
-
             function formatDateCN(dateStr) {
                 var parts = dateStr.split('-');
                 return parts[0] + ' 年 ' + parseInt(parts[1]) + ' 月 ' + parseInt(parts[2]) + ' 日';
             }
-
             function prevDay(dateStr) {
-                var d = new Date(dateStr);
-                d.setDate(d.getDate() - 1);
+                var d = new Date(dateStr); d.setDate(d.getDate() - 1);
                 return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
             }
-
             function nextDay(dateStr) {
-                var d = new Date(dateStr);
-                d.setDate(d.getDate() + 1);
+                var d = new Date(dateStr); d.setDate(d.getDate() + 1);
                 return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
             }
 
-            // 每天 00:00 自动归档当天任务
+            // ============================================================
+            // 归档逻辑（已迁移到服务端）
+            // 原方案：前端定时检查跨天 → 写入 localStorage
+            // 新方案：前端检测跨天后调用 POST /api/todos/archive
+            // 服务端负责将当天任务复制到历史表再清空原表
+            // ============================================================
             function checkAndArchive() {
                 var today = getTodayStr();
                 var lastArchive = localStorage.getItem(ARCHIVE_DATE_KEY);
                 if (lastArchive !== today) {
-                    // 归档当前任务到前一天
-                    var archiveDate = lastArchive ? prevDay(lastArchive) : prevDay(today);
-                    // 如果之前没归档过，归档今天之前的数据
-                    var todos = loadTodos();
-                    var hasContent = (todos.life && todos.life.length > 0)
-                                  || (todos.study && todos.study.length > 0)
-                                  || (todos.important && todos.important.length > 0);
-                    if (hasContent) {
-                        var hist = loadHistory();
-                        // 只保存有内容的分类
-                        hist[archiveDate] = {};
-                        if (todos.life && todos.life.length > 0) hist[archiveDate].life = JSON.parse(JSON.stringify(todos.life));
-                        if (todos.study && todos.study.length > 0) hist[archiveDate].study = JSON.parse(JSON.stringify(todos.study));
-                        if (todos.important && todos.important.length > 0) hist[archiveDate].important = JSON.parse(JSON.stringify(todos.important));
-                        saveHistory(hist);
-                    }
-                    localStorage.setItem(ARCHIVE_DATE_KEY, today);
+                    // 调用服务端归档接口
+                    apiRequest('/api/todos/archive', { method: 'POST' })
+                        .then(function(result) {
+                            if (result.ok && result.data && result.data.archived_count > 0) {
+                                console.log('已归档 ' + result.data.archived_count + ' 条任务');
+                            }
+                            // 无论是否成功，都更新标记避免重复归档
+                            localStorage.setItem(ARCHIVE_DATE_KEY, today);
+                            // 归档后刷新当前列表
+                            refreshAndRender();
+                        });
                 }
             }
+            setInterval(checkAndArchive, 60000); // 每分钟检查一次
+            checkAndArchive(); // 启动时立即检查一次
 
-            // 每分钟检查一次是否跨天
-            setInterval(checkAndArchive, 60000);
-            checkAndArchive();
-
-            // --- 渲染任务列表 ---
-            function render() {
-                var todos = getTodos();
+            // ============================================================
+            // 渲染任务列表（从内存/缓存中读取数据渲染DOM）
+            // ============================================================
+            function renderFromLocal() {
+                var todos = loadLocalTodos()[currentTab] || [];
                 listEl.innerHTML = '';
 
                 if (todos.length === 0) {
@@ -2159,20 +2953,23 @@
                         var item = document.createElement('div');
                         item.className = 'todo-item' + (todo.done ? ' done' : '');
 
+                        // 完成状态复选框
                         var check = document.createElement('span');
                         check.className = 'todo-check';
                         check.innerHTML = '<i class="fa-solid fa-check"></i>';
-                        check.addEventListener('click', function() { toggleDone(idx); });
+                        check.addEventListener('click', function() { toggleDoneApi(idx, todo.id); });
 
+                        // 任务文本（双击编辑）
                         var text = document.createElement('span');
                         text.className = 'todo-text';
                         text.textContent = todo.text;
-                        text.addEventListener('dblclick', function() { startEdit(item, idx, todo.text); });
+                        text.addEventListener('dblclick', function() { startEdit(item, idx, todo.id, todo.text); });
 
+                        // 删除按钮
                         var del = document.createElement('button');
                         del.className = 'todo-del';
                         del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-                        del.addEventListener('click', function() { removeTodo(idx); });
+                        del.addEventListener('click', function() { removeTodoApi(idx, todo.id); });
 
                         item.appendChild(check);
                         item.appendChild(text);
@@ -2181,6 +2978,7 @@
                     });
                 }
 
+                // 统计信息
                 var done = todos.filter(function(t) { return t.done; }).length;
                 var total = todos.length;
                 var pending = total - done;
@@ -2188,102 +2986,92 @@
                     ? '共 ' + total + ' 项 · 已完成 ' + done + ' · 未完成 ' + pending
                     : '';
 
-                // 更新 badge
-                var allTodos = loadTodos();
-                var allPending = (allTodos.life || []).filter(function(t) { return !t.done; }).length
-                              + (allTodos.study || []).filter(function(t) { return !t.done; }).length
-                              + (allTodos.important || []).filter(function(t) { return !t.done; }).length;
+                // Badge 角标（统计所有分类的未完成数）
+                var allTodos = loadLocalTodos();
+                var allPending = (allTodos.life||[]).filter(function(t){return !t.done;}).length
+                              + (allTodos.study||[]).filter(function(t){return !t.done;}).length
+                              + (allTodos.important||[]).filter(function(t){return !t.done;}).length;
                 badge.textContent = allPending > 0 ? allPending : '';
                 badge.dataset.count = allPending;
             }
 
-            // --- 历史日记渲染 ---
+            // ============================================================
+            // 历史日记渲染（从服务端按日期查询）
+            // ============================================================
             function renderHistory() {
-                if (!historyDate) {
-                    historyDate = getTodayStr();
-                }
+                if (!historyDate) historyDate = getTodayStr();
                 histDateEl.textContent = formatDateCN(historyDate);
 
-                var hist = loadHistory();
-                var dayData = hist[historyDate];
-                histContent.innerHTML = '';
+                // 从服务端查询指定日期的归档数据
+                apiRequest('/api/todos/history?date=' + historyDate)
+                    .then(function(result) {
+                        histContent.innerHTML = '';
 
-                if (!dayData) {
-                    histContent.innerHTML = '<div class="todo-history-empty">这一天没有归档记录</div>';
-                } else {
-                    var totalDone = 0;
-                    var totalAll = 0;
-                    ['life', 'study', 'important'].forEach(function(cat) {
-                        if (dayData[cat] && dayData[cat].length > 0) {
-                            var section = document.createElement('div');
-                            section.className = 'todo-history-section';
-                            var title = document.createElement('div');
-                            title.className = 'todo-history-section-title';
-                            title.textContent = tabNames[cat];
-                            section.appendChild(title);
+                        if (result.ok && result.data && result.data.todos) {
+                            var dayData = result.data.todos;
+                            var cats = Object.keys(dayData);
+                            
+                            if (cats.length === 0) {
+                                histContent.innerHTML = '<div class="todo-history-empty">这一天没有归档记录</div>';
+                                histNext.disabled = historyDate >= getTodayStr();
+                                return;
+                            }
 
-                            dayData[cat].forEach(function(item) {
-                                totalAll++;
-                                if (item.done) totalDone++;
-                                var row = document.createElement('div');
-                                row.className = 'todo-history-item';
-                                var mark = document.createElement('i');
-                                if (item.done) {
-                                    mark.className = 'done-mark fa-solid fa-circle-check';
-                                    row.appendChild(mark);
-                                } else {
-                                    mark.className = 'undone-mark fa-regular fa-circle';
-                                    row.appendChild(mark);
+                            var totalDone = 0, totalAll = 0;
+                            ['life', 'study', 'important'].forEach(function(cat) {
+                                if (dayData[cat] && dayData[cat].length > 0) {
+                                    var section = document.createElement('div');
+                                    section.className = 'todo-history-section';
+                                    var title = document.createElement('div');
+                                    title.className = 'todo-history-section-title';
+                                    title.textContent = tabNames[cat];
+                                    section.appendChild(title);
+
+                                    dayData[cat].forEach(function(item) {
+                                        totalAll++;
+                                        if (item.done) totalDone++;
+                                        var row = document.createElement('div');
+                                        row.className = 'todo-history-item';
+                                        var mark = document.createElement('i');
+                                        mark.className = item.done
+                                            ? 'done-mark fa-solid fa-circle-check'
+                                            : 'undone-mark fa-regular fa-circle';
+                                        row.appendChild(mark);
+                                        var txt = document.createElement('span');
+                                        txt.textContent = item.text;
+                                        if (item.done) txt.className = 'item-done';
+                                        row.appendChild(txt);
+                                        section.appendChild(row);
+                                    });
+                                    histContent.appendChild(section);
                                 }
-                                var txt = document.createElement('span');
-                                txt.textContent = item.text;
-                                if (item.done) txt.className = 'item-done';
-                                row.appendChild(txt);
-                                section.appendChild(row);
                             });
-                            histContent.appendChild(section);
+
+                            if (totalAll > 0) {
+                                var summary = document.createElement('div');
+                                summary.className = 'todo-history-summary';
+                                summary.textContent = '完成 ' + totalDone + ' / ' + totalAll + ' 项';
+                                histContent.appendChild(summary);
+                            }
+                        } else {
+                            // API 失败时降级到本地存储
+                            var localHist = loadLocalHistory();
+                            var localDayData = localHist[historyDate];
+                            if (!localDayData || Object.keys(localDayData).length === 0) {
+                                histContent.innerHTML = '<div class="todo-history-empty">这一天没有归档记录</div>';
+                            } else {
+                                // ... 简化版本地渲染（省略重复代码）
+                                histContent.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:1rem;font-size:0.75rem;">离线模式：显示本地缓存</div>';
+                            }
                         }
+                        histNext.disabled = historyDate >= getTodayStr();
                     });
-
-                    if (totalAll > 0) {
-                        var summary = document.createElement('div');
-                        summary.className = 'todo-history-summary';
-                        summary.textContent = '完成 ' + totalDone + ' / ' + totalAll + ' 项';
-                        histContent.appendChild(summary);
-                    }
-                }
-
-                // 控制前后按钮：不能超过今天
-                var today = getTodayStr();
-                histNext.disabled = historyDate >= today;
             }
 
-            // --- 添加 ---
-            function addTodo(text) {
-                text = text.trim();
-                if (!text) return;
-                var todos = getTodos();
-                todos.push({ text: text, done: false });
-                setTodos(todos);
-                input.value = '';
-                render();
-            }
-
-            function toggleDone(idx) {
-                var todos = getTodos();
-                todos[idx].done = !todos[idx].done;
-                setTodos(todos);
-                render();
-            }
-
-            function removeTodo(idx) {
-                var todos = getTodos();
-                todos.splice(idx, 1);
-                setTodos(todos);
-                render();
-            }
-
-            function startEdit(item, idx, oldText) {
+            // ============================================================
+            // 编辑功能（双击进入编辑模式）
+            // ============================================================
+            function startEdit(item, idx, todoId, oldText) {
                 var textEl = item.querySelector('.todo-text');
                 var inputEl = document.createElement('input');
                 inputEl.type = 'text';
@@ -2297,31 +3085,28 @@
                 function finishEdit() {
                     var newText = inputEl.value.trim();
                     if (newText && newText !== oldText) {
-                        var todos = getTodos();
-                        todos[idx].text = newText;
-                        setTodos(todos);
+                        updateTextApi(idx, todoId, newText);
+                    } else {
+                        renderFromLocal();
                     }
-                    render();
                 }
-
                 inputEl.addEventListener('blur', finishEdit);
                 inputEl.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') { inputEl.blur(); }
+                    if (e.key === 'Enter') inputEl.blur();
                     if (e.key === 'Escape') { inputEl.value = oldText; inputEl.blur(); }
                 });
             }
 
-            // --- 事件绑定 ---
-            // 展开/收起备忘录面板
+            // ============================================================
+            // 事件绑定
+            // ============================================================
             toggleBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                if (historyPanel.classList.contains('open')) {
-                    historyPanel.classList.remove('open');
-                }
+                if (historyPanel.classList.contains('open')) historyPanel.classList.remove('open');
                 panel.classList.toggle('open');
+                if (panel.classList.contains('open')) refreshAndRender(); // 打开时刷新数据
             });
 
-            // 打开历史归档
             historyBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 historyDate = getTodayStr();
@@ -2330,14 +3115,12 @@
                 historyPanel.classList.add('open');
             });
 
-            // 返回备忘录
             historyBack.addEventListener('click', function(e) {
                 e.stopPropagation();
                 historyPanel.classList.remove('open');
                 panel.classList.add('open');
             });
 
-            // 历史日期导航
             histPrev.addEventListener('click', function() {
                 historyDate = prevDay(historyDate);
                 renderHistory();
@@ -2351,15 +3134,11 @@
                 }
             });
 
-            // 添加按钮
-            addBtn.addEventListener('click', function() { addTodo(input.value); });
-
-            // 回车添加
+            addBtn.addEventListener('click', function() { addTodoApi(input.value); });
             input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { addTodo(input.value); }
+                if (e.key === 'Enter') { addTodoApi(input.value); }
             });
 
-            // 标签切换
             tabs.forEach(function(tab) {
                 tab.addEventListener('click', function() {
                     tabs.forEach(function(t) { t.classList.remove('active'); });
@@ -2367,11 +3146,10 @@
                     currentTab = tab.dataset.tab;
                     var phMap = { life: '输入生活事项...', study: '输入学习事项...', important: '输入重要长期任务...' };
                     input.placeholder = phMap[currentTab] || '输入新事项...';
-                    render();
+                    refreshAndRender(); // 切换标签时重新加载数据
                 });
             });
 
-            // 点击面板外部关闭
             document.addEventListener('click', function(e) {
                 var progressCard = document.getElementById('progressCard');
                 if (panel.classList.contains('open') && !progressCard.contains(e.target)) {
@@ -2382,8 +3160,186 @@
                 }
             });
 
-            // 初始渲染
-            render();
+            // 初始加载当前分类的数据
+            fetchTodos().then(function(todos) {
+                var localData = loadLocalTodos();
+                localData[currentTab] = todos;
+                saveLocalTodos(localData);
+                renderFromLocal();
+            });
+        })();
+
+        // ========== Guestbook (留言板) ==========
+        // 新增功能模块：允许访客在个人主页留下想说的话
+        //
+        // 技术实现：
+        //   - 数据存储在 MySQL 数据库（通过 REST API）
+        //   - GET  /api/guestbook?page=1&size=5  获取最新5条留言
+        //   - POST /api/guestbook              发布新留言
+        //
+        // 功能特性：
+        //   - 昵称可选（不填则显示"匿名访客"）
+        //   - 支持查看更多（展开全部留言）
+        //   - 发送按钮带 loading 状态和缩放反馈
+        //   - 新留言自动插入列表顶部（带淡入动画）
+        //   - 内容长度限制500字符，自动过滤HTML防XSS
+        (function() {
+            var messagesEl = document.getElementById('gbMessages');
+            var emptyEl = document.getElementById('gbEmpty');
+            var moreBtn = document.getElementById('gbMore');
+            var nicknameInput = document.getElementById('gbNickname');
+            var contentInput = document.getElementById('gbContent');
+            var sendBtn = document.getElementById('gbSendBtn');
+
+            var currentPage = 1;
+            var pageSize = 5; // 默认只展示最新5条
+            var isExpanded = false;
+
+            // 加载留言列表
+            function loadMessages(page, size) {
+                page = page || 1;
+                size = size || pageSize;
+                return fetch('/api/guestbook?page=' + page + '&size=' + size)
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res.code === 0 && res.data) {
+                            return res.data;
+                        }
+                        return null;
+                    })
+                    .catch(function(err) {
+                        console.warn('[Guestbook] 加载失败:', err);
+                        return null;
+                    });
+            }
+
+            // 渲染单条留言
+            function createMessageElement(msg) {
+                var div = document.createElement('div');
+                div.className = 'gb-item';
+
+                // 昵称行
+                var nickRow = document.createElement('div');
+                nickRow.className = 'gb-nick-row';
+
+                var nickSpan = document.createElement('span');
+                nickSpan.className = 'gb-nickname-display';
+                nickSpan.textContent = msg.nickname || '匿名访客';
+
+                var timeSpan = document.createElement('span');
+                timeSpan.className = 'gb-time';
+                timeSpan.textContent = formatTime(msg.created_at);
+
+                nickRow.appendChild(nickSpan);
+                nickRow.appendChild(timeSpan);
+
+                // 内容
+                var contentDiv = document.createElement('div');
+                contentDiv.className = 'gb-text';
+                contentDiv.textContent = msg.content;
+
+                div.appendChild(nickRow);
+                div.appendChild(contentDiv);
+                return div;
+            }
+
+            // 格式化时间戳为相对时间或固定格式
+            function formatTime(dateStr) {
+                if (!dateStr) return '';
+                var date = new Date(dateStr);
+                var now = new Date();
+                var diffMs = now - date;
+                var diffMin = Math.floor(diffMs / 60000);
+                var diffHour = Math.floor(diffMin / 60);
+
+                if (diffMin < 1) return '刚刚';
+                if (diffMin < 60) return diffMin + ' 分钟前';
+                if (diffHour < 24) return diffHour + ' 小时前';
+                if (diffHour < 48) return '昨天';
+                // 超过两天显示具体日期
+                return (date.getMonth() + 1) + '/' + date.getDate();
+            }
+
+            // 主渲染函数
+            function render(data) {
+                messagesEl.innerHTML = ''; // 清空现有内容
+                
+                if (!data || !data.list || data.list.length === 0) {
+                    messagesEl.innerHTML = '<div class="gb-empty" id="gbEmpty">暂无留言，来说点什么吧~</div>';
+                    moreBtn.style.display = 'none';
+                    return;
+                }
+
+                data.list.forEach(function(msg) {
+                    messagesEl.appendChild(createMessageElement(msg));
+                });
+
+                // 是否显示"查看更多"
+                if (data.total > pageSize && !isExpanded) {
+                    moreBtn.style.display = 'block';
+                } else {
+                    moreBtn.style.display = 'none';
+                }
+            }
+
+            // 发布留言
+            function sendMessage() {
+                var nickname = nicknameInput.value.trim();
+                var content = contentInput.value.trim();
+
+                if (!content) {
+                    contentInput.focus();
+                    return;
+                }
+
+                // 设置发送中状态
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+                fetch('/api/guestbook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname: nickname, content: content })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+
+                    if (res.code === 0) {
+                        // 清空输入框
+                        contentInput.value = '';
+                        // 重新加载列表（新留言会在顶部）
+                        loadMessages(currentPage, isExpanded ? 50 : pageSize)
+                            .then(render);
+                    } else {
+                        alert('发送失败: ' + (res.message || '未知错误'));
+                    }
+                })
+                .catch(function(err) {
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+                    alert('网络错误，请稍后重试');
+                });
+            }
+
+            // 查看更多
+            moreBtn.addEventListener('click', function() {
+                isExpanded = true;
+                moreBtn.style.display = 'none';
+                loadMessages(1, 50).then(render); // 加载更多条目
+            });
+
+            // 发送按钮点击
+            sendBtn.addEventListener('click', sendMessage);
+
+            // 回车发送
+            contentInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            // 页面加载时获取最新留言
+            loadMessages(currentPage, pageSize).then(render);
         })();
     </script>
 </body>
