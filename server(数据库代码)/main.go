@@ -1,0 +1,323 @@
+// TinyWeb1 主程序入口文件
+// =============================================
+// 作用：
+//   程序的启动入口，负责以下工作：
+//
+//   1. 加载配置：从环境变量读取数据库连接信息、端口等配置
+//   2. 初始化主数据库：建立 GORM 连接，自动迁移表结构
+//   3. 初始化测试数据库：验证双数据库连接功能
+//   4. 测试数据库功能：写入和查询 visit_stats 表，验证 GORM 正常工作
+//   5. 启动 HTTP 服务器：提供静态文件服务和健康检查接口
+//
+// 项目架构说明：
+//   - config/    : 配置管理模块（环境变量 → 结构体）
+//   - model/     : 数据结构定义（GORM 模型 + 请求/响应格式）
+//   - db/        : 数据库连接和自动迁移（基于 GORM）
+//   - handler/   : 各业务模块的 API 处理函数（待后续迁移到 GORM）
+//   - main.go    : 本文件，启动和测试
+//
+// 启动方式：
+//   cd "server(数据库代码)" && go run main.go
+//
+// 环境变量配置（可选）：
+//   APP_ENV=development go run main.go              # 开发模式（默认）
+//   DB_HOST=localhost DB_PASS=123456 go run main.go  # 指定数据库
+//
+// Day 1 更新日志（2026-04-07）：
+//   - 从 database/sql 迁移到 GORM
+//   - 新增测试数据库连接验证
+//   - 新增 visit_stats 表的读写测试
+//   - 暂时移除旧 handler 路由（待后续迁移到 GORM）
+// =============================================
+
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"path/filepath"
+	"runtime"
+	"time"
+
+	"gorm.io/gorm"
+
+	"tinyweb1/config"
+	"tinyweb1/db"
+	"tinyweb1/model"
+)
+
+func main() {
+	// ============================================================
+	// 步骤 1: 加载配置
+	// ============================================================
+	config.Load()
+	printConfigInfo()
+
+	// ============================================================
+	// 步骤 2: 初始化主数据库（tinyweb1）
+	// ============================================================
+	db.Initialize()
+
+	// ============================================================
+	// 步骤 3: 初始化测试数据库（tinyweb1_test）
+	// ============================================================
+	db.InitializeTestDB()
+
+	// ============================================================
+	// 步骤 4: 测试数据库功能 - 验证 visit_stats 表的 CRUD 操作
+	// ============================================================
+	testVisitStats()
+
+	// ============================================================
+	// 步骤 5: 启动 HTTP 服务器（静态文件 + 健康检查）
+	// ============================================================
+	startServer()
+}
+
+// ============================================================
+// 配置信息打印
+// ============================================================
+
+// printConfigInfo 打印当前加载的配置信息，便于确认程序运行参数
+func printConfigInfo() {
+	fmt.Println("📋 配置加载完成")
+	fmt.Printf("   运行环境: %s\n", config.GetAppEnv())
+	fmt.Printf("   主数据库: %s:%s/%s\n", config.GetDBHost(), config.GetDBPort(), config.GetDBName())
+	fmt.Printf("   测试数据库: %s:%s/%s\n", config.GetTestDBHost(), config.GetTestDBPort(), config.GetTestDBName())
+	fmt.Printf("   服务端口: %s\n", config.GetServerPort())
+}
+
+// ============================================================
+// 数据库功能测试
+// ============================================================
+
+// testVisitStats 测试 visit_stats 表的数据库操作
+// 通过实际写入、查询、更新操作验证 GORM 和表结构是否正常工作
+//
+// 测试步骤：
+//   1. 在测试库中插入一条测试记录
+//   2. 查询该记录，验证数据正确
+//   3. 更新访问次数，验证更新操作
+//   4. 清理测试数据
+func testVisitStats() {
+	fmt.Println("")
+	fmt.Println("🔍 开始测试 visit_stats 表...")
+
+	database := db.GetTestDB() // 使用测试库进行测试，不影响主库数据
+	now := time.Now()
+
+	// 定义测试数据
+	testIP := "192.168.1.100"
+	testRecord := model.VisitStats{
+		VisitorIP:    testIP,
+		VisitCount:   1,
+		FirstVisitAt: now,
+		LastVisitAt:  now,
+		UserAgent:    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TestBot/1.0",
+		DeviceType:   "desktop",
+		Browser:      "Chrome",
+		OS:           "Windows",
+		Referrer:     "https://www.baidu.com",
+	}
+
+	// 测试 1: 插入记录
+	if err := database.Create(&testRecord).Error; err != nil {
+		log.Printf("   ⚠️  插入测试记录失败（可能是重复数据）: %v", err)
+	} else {
+		fmt.Println("   ✅ 测试 1 通过: 插入记录成功")
+	}
+
+	// 测试 2: 查询记录 - 根据 visitor_ip 查找
+	var found model.VisitStats
+	result := database.Where("visitor_ip = ?", testIP).First(&found)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			log.Printf("   ⚠️  查询测试记录失败: 未找到 IP=%s 的记录", testIP)
+		} else {
+			log.Printf("   ⚠️  查询测试记录失败: %v", result.Error)
+		}
+	} else {
+		fmt.Printf("   ✅ 测试 2 通过: 查询成功 [IP=%s, 次数=%d, 设备=%s]\n",
+			found.VisitorIP, found.VisitCount, found.DeviceType)
+	}
+
+	// 测试 3: 更新访问次数 - 模拟访客再次访问
+	if result.Error == nil {
+		updateErr := database.Model(&found).Updates(map[string]interface{}{
+			"visit_count":  gorm.Expr("visit_count + 1"), // 访问次数 +1
+			"last_visit_at": time.Now(),                   // 更新最后访问时间
+		}).Error
+		if updateErr != nil {
+			log.Printf("   ⚠️  更新测试记录失败: %v", updateErr)
+		} else {
+			fmt.Println("   ✅ 测试 3 通过: 更新访问次数成功")
+		}
+	}
+
+	// 测试 4: 统计总记录数
+	var totalCount int64
+	database.Model(&model.VisitStats{}).Count(&totalCount)
+	fmt.Printf("   ✅ 测试 4 通过: 当前 visit_stats 表共 %d 条记录\n", totalCount)
+
+	// 测试 5: 查询主库中的记录数（主库应该是空的或只有旧数据）
+	mainDB := db.GetDB()
+	var mainCount int64
+	mainDB.Model(&model.VisitStats{}).Count(&mainCount)
+	fmt.Printf("   ✅ 测试 5 通过: 主库 visit_stats 表共 %d 条记录\n", mainCount)
+
+	fmt.Println("   🎉 visit_stats 表测试完成!")
+	fmt.Println("")
+}
+
+// ============================================================
+// HTTP 服务器启动
+// ============================================================
+
+// startServer 启动 HTTP 服务器
+// 提供静态文件服务（index.html 等）和健康检查接口
+//
+// 路由说明：
+//   - GET /api/health : 健康检查接口，返回服务器和数据库状态
+//   - GET /           : 静态文件服务（index.html 等）
+//
+// 注意：原有的 API 路由（todo、setting、guestbook）暂时移除
+// 因为这些 handler 使用旧的 database/sql 接口，
+// 待后续迁移到 GORM 后会重新添加
+func startServer() {
+	// 获取项目根目录（server 的上一级），用于提供 index.html 等静态文件
+	_, currentFile, _, _ := runtime.Caller(0)
+	rootDir := filepath.Dir(filepath.Dir(currentFile))
+
+	// 创建路由器
+	mux := http.NewServeMux()
+
+	// ---- 健康检查接口 ----
+	// 用于验证服务器和数据库是否正常运行
+	mux.HandleFunc("/api/health", healthCheckHandler)
+
+	// ---- 静态文件兜底路由 ----
+	// 所有未被 API 路由匹配的请求都交给静态文件服务器处理
+	fs := http.FileServer(http.Dir(rootDir))
+	mux.Handle("/", fs)
+
+	// 打印启动信息
+	addr := config.GetServerPort()
+	fmt.Println("========================================")
+	fmt.Println("  🚀 TinyWeb1 Server is running!")
+	fmt.Printf("  📍 访问地址: http://localhost%s\n", addr)
+	fmt.Printf("  📂 静态文件: %s\n", rootDir)
+	fmt.Printf("  🔧 运行环境: %s\n", config.GetAppEnv())
+	fmt.Println("  🔗 接口:")
+	fmt.Println("     GET /api/health  健康检查")
+	fmt.Println("========================================")
+
+	// 启动 HTTP 服务（带 CORS 中间件）
+	if err := http.ListenAndServe(addr, corsMiddleware(mux)); err != nil {
+		log.Fatal("❌ Server failed to start:", err)
+	}
+}
+
+// healthCheckHandler 健康检查接口处理函数
+// 返回服务器运行状态和数据库连接信息
+//
+// 响应示例：
+//   GET /api/health
+//   {
+//     "code": 0,
+//     "message": "success",
+//     "data": {
+//       "status": "healthy",
+//       "env": "development",
+//       "main_db": "tinyweb1",
+//       "test_db": "tinyweb1_test",
+//       "time": "2026-04-07 19:00:00"
+//     }
+//   }
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// 检查主数据库连接
+	sqlDB, err := db.GetDB().DB()
+	dbStatus := "connected"
+	if err != nil || sqlDB.Ping() != nil {
+		dbStatus = "disconnected"
+	}
+
+	response := map[string]interface{}{
+		"code":    0,
+		"message": "success",
+		"data": map[string]string{
+			"status":  dbStatus,
+			"env":     config.GetAppEnv(),
+			"main_db": config.GetDBName(),
+			"test_db": config.GetTestDBName(),
+			"time":    time.Now().Format("2006-01-02 15:04:05"),
+		},
+	}
+
+	// 手动构建 JSON 响应（避免引入额外的 JSON 序列化依赖）
+	fmt.Fprintf(w, `{"code":%d,"message":"%s","data":{"status":"%s","env":"%s","main_db":"%s","test_db":"%s","time":"%s"}}`,
+		response["code"], response["message"],
+		response["data"].(map[string]string)["status"],
+		response["data"].(map[string]string)["env"],
+		response["data"].(map[string]string)["main_db"],
+		response["data"].(map[string]string)["test_db"],
+		response["data"].(map[string]string)["time"],
+	)
+}
+
+// corsMiddleware CORS 跨域中间件
+// =============================================
+// 作用：
+//   在每个 HTTP 响应中添加 CORS 相关的头部，
+//   允许前端 JavaScript 从不同域名/端口调用此 API。
+//
+// 为什么需要 CORS？
+//   前端页面可能部署在 example.com:80，
+//   后端 API 运行在 api.example.com:8081，
+//   浏览器的同源策略会阻止这种跨域请求。
+//   通过添加 Access-Control-Allow-* 头部来允许合法的跨域访问。
+//
+// 安全注意事项：
+//   生产环境应将 ALLOWED_ORIGINS 设为具体的域名（如 https://yourdomain.com），
+//   仅开发环境使用 "*" 允许所有来源。
+// =============================================
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		allowedOrigins := config.GetAllowedOrigins()
+
+		// 检查请求来源是否在允许列表中
+		allowOrigin := ""
+		if len(allowedOrigins) == 1 && allowedOrigins[0] == "*" {
+			// 开发模式：允许所有来源
+			allowOrigin = "*"
+		} else {
+			// 生产模式：逐一比对允许的来源
+			for _, allowed := range allowedOrigins {
+				if origin == allowed {
+					allowOrigin = origin
+					break
+				}
+			}
+		}
+
+		// 设置 CORS 响应头
+		if allowOrigin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", allowOrigin)                // 允许的来源
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS") // 允许的方法
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")      // 允许的请求头
+			w.Header().Set("Access-Control-Max-Age", "86400") // 预检请求缓存时间（24小时）
+		}
+
+		// 处理预检请求 (OPTIONS)：浏览器在非简单请求前会先发送 OPTIONS 探测
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent) // 204 No Content
+			return
+		}
+
+		// 继续处理实际请求
+		next.ServeHTTP(w, r)
+	})
+}
