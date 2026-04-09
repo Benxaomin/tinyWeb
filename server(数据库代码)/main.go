@@ -36,8 +36,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
-	"runtime"
+	"os"
 	"time"
 
 	"gorm.io/gorm"
@@ -186,9 +185,15 @@ func testVisitStats() {
 // 因为这些 handler 使用旧的 database/sql 接口，
 // 待后续迁移到 GORM 后会重新添加
 func startServer() {
-	// 获取项目根目录（server 的上一级），用于提供 index.html 等静态文件
-	_, currentFile, _, _ := runtime.Caller(0)
-	rootDir := filepath.Dir(filepath.Dir(currentFile))
+	// 获取项目根目录：优先使用 STATIC_DIR 环境变量，否则使用当前工作目录
+	rootDir := config.GetStaticDir()
+	if rootDir == "" {
+		var err error
+		rootDir, err = os.Getwd()
+		if err != nil {
+			log.Fatal("❌ 无法获取当前工作目录:", err)
+		}
+	}
 
 	// 创建路由器
 	mux := http.NewServeMux()

@@ -57,8 +57,9 @@ type AppConfig struct {
 	TestDB  DBConfig // 测试数据库配置（开发和测试使用的数据库）
 
 	// 服务器配置
-	ServerPort    string   // HTTP 监听端口（含冒号，如 ":8081"）
+	ServerPort     string   // HTTP 监听端口（含冒号，如 ":8081"）
 	AllowedOrigins []string // 允许的 CORS 跨域来源列表
+	StaticDir      string   // 静态文件目录（为空则使用当前工作目录）
 }
 
 // appConfig 全局配置实例（包内私有，通过函数访问）
@@ -94,6 +95,7 @@ func Load() {
 		// 服务器配置
 		ServerPort:     ":" + getEnv("SERVER_PORT", "8081"),
 		AllowedOrigins: parseOrigins(getEnv("ALLOWED_ORIGINS", "*")),
+		StaticDir:      getEnv("STATIC_DIR", ""),
 	}
 }
 
@@ -183,6 +185,12 @@ func GetServerPort() string {
 // GetAllowedOrigins 返回允许的 CORS 跨域来源列表
 func GetAllowedOrigins() []string {
 	return appConfig.AllowedOrigins
+}
+
+// GetStaticDir 返回静态文件目录路径
+// 如果未配置，返回空字符串（由调用方决定默认行为）
+func GetStaticDir() string {
+	return appConfig.StaticDir
 }
 
 // ============================================================

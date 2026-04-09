@@ -1,0 +1,11 @@
+# 编译产物
+server(数据库代码)/tinyweb-server
+
+# OS 文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
