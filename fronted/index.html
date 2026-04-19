@@ -5217,6 +5217,11 @@
                             self.user = res.data.user;
                             self.showLoggedIn(res.data.user);
                             self.hideModal();
+                            // 如果是从专注时间触发的登录，自动打开专注面板
+                            if (self._pendingFocus) {
+                                self._pendingFocus = false;
+                                FocusTimer.showPanel();
+                            }
                         }
                     } else {
                         // 失败，显示错误
@@ -5528,7 +5533,14 @@
 
             // ---- 显示/隐藏面板 ----
             showPanel: function() {
+                // 未登录 → 弹登录框，登录成功后再打开
+                if (!AuthManager.getToken()) {
+                    AuthManager._pendingFocus = true; // 标记：登录后自动打开
+                    AuthManager.showModal('login');
+                    return;
+                }
                 document.getElementById('focusPanel').classList.add('show');
+                this.loadTags();      // 每次打开刷新标签
                 this.loadTodayStats(); // 每次打开刷新统计
                 this.hideReport(); // 面板打开时隐藏报告
             },
@@ -5843,7 +5855,7 @@
             // ---- 加载标签列表 ----
             loadTags: function() {
                 var self = this;
-                fetch(this.API_BASE + '/api/focus/tags')
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/tags')
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (res.code === 0 && res.data) {
@@ -5920,7 +5932,7 @@
                     return;
                 }
 
-                fetch(this.API_BASE + '/api/focus/tags', {
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/tags', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: name, color: color })
@@ -5951,7 +5963,7 @@
             // ---- 加载今日统计 ----
             loadTodayStats: function() {
                 var self = this;
-                fetch(this.API_BASE + '/api/focus/today')
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/today')
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (res.code === 0 && res.data) {
@@ -6019,7 +6031,7 @@
                     tag_color: this.tagColor
                 };
 
-                fetch(this.API_BASE + '/api/focus/session', {
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -6315,7 +6327,7 @@
             loadHistory: function() {
                 var self = this;
                 var today = new Date().toISOString().slice(0, 10);
-                fetch(this.API_BASE + '/api/focus/history?date=' + today)
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/history?date=' + today)
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         var container = document.getElementById('focusHistoryList');
