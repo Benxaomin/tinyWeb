@@ -4310,7 +4310,10 @@
                 options = options || {};
                 if (!options.headers) options.headers = {};
                 options.headers['Content-Type'] = 'application/json';
-
+                // 防御：AuthManager 可能还未初始化（IIFE 执行顺序问题）
+                if (!AuthManager || !AuthManager.fetchWithAuth) {
+                    return Promise.reject(new Error('AuthManager未初始化'));
+                }
                 return AuthManager.fetchWithAuth(url, options)
                     .then(function(res) {
                         // 401 未登录 → 弹登录框
