@@ -35,12 +35,15 @@ import (
 	"gorm.io/gorm"
 
 	"tinyweb1/db"
+	"tinyweb1/middleware"
 	"tinyweb1/model"
 )
 
-// todoUser 备忘录功能的默认用户标识
-// 当前固定为 "default"，预留多用户扩展
-const todoUser = "default"
+// getTodoUserID 从请求 context 中提取当前登录用户的 ID
+// 需要配合 AuthMiddleware 使用，未登录时返回 0, false
+func getTodoUserID(r *http.Request) (uint, bool) {
+	return middleware.GetUserID(r.Context())
+}
 
 // ============================================================
 // GET /api/todos?category=xxx - 获取待办任务列表
@@ -53,6 +56,12 @@ const todoUser = "default"
 // 返回示例：
 //   {"code":0,"message":"success","data":[{"id":1,"category":"life","text":"买菜","done":false,...}]}
 func GetTodos(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getTodoUserID(r)
+	if !ok {
+		sendJSON(w, http.StatusUnauthorized, model.ErrorResponse(401, "未登录"))
+		return
+	}
+
 	category := r.URL.Query().Get("category")
 	if category == "" {
 		sendJSON(w, http.StatusBadRequest, model.ErrorResponse(400, "缺少 category 参数"))
@@ -67,7 +76,7 @@ func GetTodos(w http.ResponseWriter, r *http.Request) {
 
 	database := db.GetDB()
 	var todos []model.Todo
-	if err := database.Where("user_id = ? AND category = ?", todoUser, category).
+	if err := database.Where("user_id = ? AND category = ?", userID, category).
 		Order("sort_order ASC, id ASC").Find(&todos).Error; err != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "查询失败"))
 		return
@@ -84,6 +93,12 @@ func GetTodos(w http.ResponseWriter, r *http.Request) {
 // Request Body (JSON)：
 //   { "category": "life", "text": "买菜" }
 func CreateTodo(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getTodoUserID(r)
+	if !ok {
+		sendJSON(w, http.StatusUnauthorized, model.ErrorResponse(401, "未登录"))
+		return
+	}
+
 	var req model.TodoCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		sendJSON(w, http.StatusBadRequest, model.ErrorResponse(400, "请求数据格式错误"))
@@ -107,7 +122,7 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 
 	database := db.GetDB()
 	todo := model.Todo{
-		UserID:    todoUser,
+		UserID:    userID,
 		Category:  req.Category,
 		Text:      req.Text,
 		Done:      false,
@@ -131,6 +146,12 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 // Request Body (JSON)：
 //   { "text": "新内容" }  或  { "done": true }  或两者都有
 func UpdateTodo(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getTodoUserID(r)
+	if !ok {
+		sendJSON(w, http.StatusUnauthorized, model.ErrorResponse(401, "未登录"))
+		return
+	}
+
 	id, err := extractTodoID(r)
 	if err != nil {
 		sendJSON(w, http.StatusBadRequest, model.ErrorResponse(400, "无效的任务 ID"))
@@ -145,9 +166,9 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 
 	database := db.GetDB()
 
-	// 先查询记录是否存在
+	// 先查询记录是否存在（且属于当前用户）
 	var todo model.Todo
-	if err := database.Where("id = ? AND user_id = ?", id, todoUser).First(&todo).Error; err != nil {
+	if err := database.Where("id = ? AND user_id = ?", id, userID).First(&todo).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			sendJSON(w, http.StatusNotFound, model.ErrorResponse(404, "任务不存在"))
 		} else {
@@ -195,6 +216,12 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 
 // DeleteTodo 删除指定的待办任务
 func DeleteTodo(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getTodoUserID(r)
+	if !ok {
+		sendJSON(w, http.StatusUnauthorized, model.ErrorResponse(401, "未登录"))
+		return
+	}
+
 	id, err := extractTodoID(r)
 	if err != nil {
 		sendJSON(w, http.StatusBadRequest, model.ErrorResponse(400, "无效的任务 ID"))
@@ -202,7 +229,7 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	database := db.GetDB()
-	result := database.Where("id = ? AND user_id = ?", id, todoUser).Delete(&model.Todo{})
+	result := database.Where("id = ? AND user_id = ?", id, userID).Delete(&model.Todo{})
 	if result.Error != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "删除失败"))
 		return
@@ -222,12 +249,18 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
 // ArchiveTodos 将当前用户的所有待办任务复制到历史归档表中，然后清空原表中的这些记录
 // 触发时机：前端每日首次加载时调用
 func ArchiveTodos(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getTodoUserID(r)
+	if !ok {
+		sendJSON(w, http.StatusUnauthorized, model.ErrorResponse(401, "未登录"))
+		return
+	}
+
 	database := db.GetDB()
 	today := time.Now().Format("2006-01-02")
 
-	// 查询所有待归档的任务
+	// 查询当前用户所有待归档的任务
 	var tasks []model.Todo
-	if err := database.Where("user_id = ?", todoUser).Order("sort_order ASC").Find(&tasks).Error; err != nil {
+	if err := database.Where("user_id = ?", userID).Order("sort_order ASC").Find(&tasks).Error; err != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "查询待归档任务失败"))
 		return
 	}
@@ -261,7 +294,7 @@ func ArchiveTodos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 删除已归档的任务
-	if err := tx.Where("user_id = ?", todoUser).Delete(&model.Todo{}).Error; err != nil {
+	if err := tx.Where("user_id = ?", userID).Delete(&model.Todo{}).Error; err != nil {
 		tx.Rollback()
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "清理原任务失败"))
 		return
@@ -283,6 +316,12 @@ func ArchiveTodos(w http.ResponseWriter, r *http.Request) {
 // Query 参数：
 //   - date: 归档日期（YYYY-MM-DD 格式），不传则返回今天的
 func GetTodoHistoryByDate(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getTodoUserID(r)
+	if !ok {
+		sendJSON(w, http.StatusUnauthorized, model.ErrorResponse(401, "未登录"))
+		return
+	}
+
 	date := r.URL.Query().Get("date")
 	if date == "" {
 		date = time.Now().Format("2006-01-02")
@@ -290,7 +329,7 @@ func GetTodoHistoryByDate(w http.ResponseWriter, r *http.Request) {
 
 	database := db.GetDB()
 	var histories []model.TodoHistory
-	if err := database.Where("user_id = ? AND archive_date = ?", todoUser, date).
+	if err := database.Where("user_id = ? AND archive_date = ?", userID, date).
 		Order("category ASC").Find(&histories).Error; err != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "查询历史失败"))
 		return
@@ -316,12 +355,18 @@ func GetTodoHistoryByDate(w http.ResponseWriter, r *http.Request) {
 // GetTodoHistoryDates 获取所有存在归档记录的日期列表
 // 返回示例：["2026-04-01","2026-04-03","2026-04-05"]
 func GetTodoHistoryDates(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getTodoUserID(r)
+	if !ok {
+		sendJSON(w, http.StatusUnauthorized, model.ErrorResponse(401, "未登录"))
+		return
+	}
+
 	database := db.GetDB()
 
 	var dates []string
 	rows, err := database.Model(&model.TodoHistory{}).
 		Select("DISTINCT archive_date").
-		Where("user_id = ?", todoUser).
+		Where("user_id = ?", userID).
 		Order("archive_date DESC").
 		Rows()
 	if err != nil {
