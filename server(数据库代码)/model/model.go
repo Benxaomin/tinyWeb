@@ -186,7 +186,7 @@ type VisitStatsResponse struct {
 // 对应数据库 todos 表，存储用户当前的待办事项
 type Todo struct {
 	ID        int       `json:"id"`         // 任务唯一标识（自增主键）
-	UserID    string    `json:"user_id"`    // 用户标识（当前固定为 "default"，预留多用户扩展）
+	UserID    uint      `json:"user_id"`    // 关联用户ID（登录后从JWT token获取）
 	Category  string    `json:"category"`   // 分类："life"(生活) / "study"(学习) / "important"(重要)
 	Text      string    `json:"text"`       // 任务内容文本（最长200字符）
 	Done      bool      `json:"done"`       // 是否已完成：true=完成, false=未完成
@@ -214,7 +214,7 @@ type TodoUpdateRequest struct {
 // 对应数据库 todo_history 表，存储已归档的过期任务
 type TodoHistory struct {
 	ID          int    `json:"id"`           // 记录唯一标识（自增主键）
-	UserID      string `json:"user_id"`      // 用户标识
+	UserID      uint   `json:"user_id"`      // 关联用户ID
 	ArchiveDate string `json:"archive_date"` // 归档日期（格式 YYYY-MM-DD）
 	Category    string `json:"category"`     // 归档时的分类
 	Text        string `json:"text"`         // 任务内容

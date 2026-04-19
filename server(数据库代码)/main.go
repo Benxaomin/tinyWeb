@@ -257,9 +257,8 @@ func startServer() {
 		}
 	}))
 
-	// ---- 备忘录接口（从 database/sql 迁移到 GORM 后重新启用）----
-	// 这些接口之前因为使用旧接口被注释，现在用 GORM 重写后重新注册
-	mux.HandleFunc("/api/todos", func(w http.ResponseWriter, r *http.Request) {
+	// ---- 备忘录接口（需登录认证，用户数据隔离）----
+	mux.HandleFunc("/api/todos", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			handler.GetTodos(w, r)
@@ -268,31 +267,30 @@ func startServer() {
 		default:
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/todos/archive", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/todos/archive", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			handler.ArchiveTodos(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/todos/history/dates", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/todos/history/dates", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handler.GetTodoHistoryDates(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/todos/history", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/todos/history", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handler.GetTodoHistoryByDate(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
+	}))
 	// /api/todos/:id 必须放在 /api/todos/ 之后，避免匹配冲突
-	// Go 的 ServeMux 会将 /api/todos/ 前缀的请求路由到这里
-	mux.HandleFunc("/api/todos/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/todos/", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		// 排除已注册的 /api/todos/archive 和 /api/todos/history 路径
 		path := r.URL.Path
 		if path == "/api/todos/archive" || path == "/api/todos/history" || path == "/api/todos/history/dates" {
@@ -307,38 +305,38 @@ func startServer() {
 		default:
 			sendMethodNotAllowed(w)
 		}
-	})
+	}))
 
-	// ---- 专注时间接口（Focus Time 功能新增）----
-	mux.HandleFunc("/api/focus/session", func(w http.ResponseWriter, r *http.Request) {
+	// ---- 专注时间接口（需登录认证）----
+	mux.HandleFunc("/api/focus/session", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			handler.CreateFocusSession(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/focus/today", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/focus/today", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handler.GetTodayFocus(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/focus/summary", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/focus/summary", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handler.GetFocusSummary(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/focus/history", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/focus/history", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handler.GetFocusHistory(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/focus/tags", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/focus/tags", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			handler.GetTags(w, r)
@@ -347,7 +345,7 @@ func startServer() {
 		default:
 			sendMethodNotAllowed(w)
 		}
-	})
+	}))
 
 	// ---- 静态文件兜底路由 ----
 	// 所有未被 API 路由匹配的请求都交给静态文件服务器处理

@@ -28,12 +28,19 @@ import (
 	"time"
 
 	"tinyweb1/db"
+	"tinyweb1/middleware"
 	"tinyweb1/model"
 )
 
-// defaultUser 专注时间功能的默认用户ID
-// 后续接入 JWT 认证后，会从 token 中获取真实的 user_id
-const defaultUser uint = 1
+// getUserID 从 JWT 认证中间件注入的 context 中提取当前登录用户 ID
+// 如果取不到（理论上不会，因为路由已加 AuthMiddleware），返回 0 并报错
+func getUserID(r *http.Request) uint {
+	id, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		return 0 // 不应该发生，路由层已拦截未认证请求
+	}
+	return id
+}
 
 // formatDuration 将秒数格式化为 "X小时Y分钟" 的可读字符串
 func formatDuration(seconds int64) string {
@@ -88,7 +95,7 @@ func CreateFocusSession(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	session := model.StudySession{
-		UserID:    defaultUser,
+		UserID:    getUserID(r),
 		Duration:  req.Duration,
 		Date:      now.Format("2006-01-02"),
 		StartedAt: now,
@@ -117,7 +124,7 @@ func GetTodayFocus(w http.ResponseWriter, r *http.Request) {
 
 	// 查询今日所有专注记录
 	var sessions []model.StudySession
-	if err := database.Where("user_id = ? AND date = ?", defaultUser, today).Find(&sessions).Error; err != nil {
+	if err := database.Where("user_id = ? AND date = ?", getUserID(r), today).Find(&sessions).Error; err != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "查询今日专注数据失败"))
 		return
 	}
@@ -172,9 +179,9 @@ func GetFocusSummary(w http.ResponseWriter, r *http.Request) {
 	// 历史总计
 	var totalSeconds int64
 	var totalSessions int64
-	database.Model(&model.StudySession{}).Where("user_id = ?", defaultUser).
+	database.Model(&model.StudySession{}).Where("user_id = ?", getUserID(r)).
 		Select("COALESCE(SUM(duration), 0)").Scan(&totalSeconds)
-	database.Model(&model.StudySession{}).Where("user_id = ?", defaultUser).
+	database.Model(&model.StudySession{}).Where("user_id = ?", getUserID(r)).
 		Count(&totalSessions)
 
 	// 每日统计
@@ -183,7 +190,7 @@ func GetFocusSummary(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := database.Model(&model.StudySession{}).
 		Select("date, SUM(duration) as total_seconds, COUNT(*) as session_count").
-		Where("user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)", defaultUser, days).
+		Where("user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)", getUserID(r), days).
 		Group("date").
 		Order("date DESC").
 		Rows()
@@ -232,7 +239,7 @@ func GetFocusHistory(w http.ResponseWriter, r *http.Request) {
 
 	database := db.GetDB()
 	var sessions []model.StudySession
-	if err := database.Where("user_id = ? AND date = ?", defaultUser, date).
+	if err := database.Where("user_id = ? AND date = ?", getUserID(r), date).
 		Order("started_at ASC").Find(&sessions).Error; err != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "查询专注记录失败"))
 		return
@@ -287,7 +294,7 @@ func CreateTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tag := model.StudyTag{
-		UserID: defaultUser,
+		UserID: getUserID(r),
 		Name:   req.Name,
 		Color:  req.Color,
 	}
@@ -314,7 +321,7 @@ func CreateTag(w http.ResponseWriter, r *http.Request) {
 func GetTags(w http.ResponseWriter, r *http.Request) {
 	database := db.GetDB()
 	var tags []model.StudyTag
-	if err := database.Where("user_id = ?", defaultUser).Order("created_at ASC").Find(&tags).Error; err != nil {
+	if err := database.Where("user_id = ?", getUserID(r)).Order("created_at ASC").Find(&tags).Error; err != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "查询标签失败"))
 		return
 	}
