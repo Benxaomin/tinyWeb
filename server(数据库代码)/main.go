@@ -309,36 +309,36 @@ func startServer() {
 		}
 	})
 
-	// ---- 专注时间接口（Focus Time 功能新增）----
-	mux.HandleFunc("/api/focus/session", func(w http.ResponseWriter, r *http.Request) {
+	// ---- 专注时间接口（需登录认证）----
+	mux.HandleFunc("/api/focus/session", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			handler.CreateFocusSession(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/focus/today", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/focus/today", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handler.GetTodayFocus(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/focus/summary", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/focus/summary", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handler.GetFocusSummary(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/focus/history", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/focus/history", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handler.GetFocusHistory(w, r)
 		} else {
 			sendMethodNotAllowed(w)
 		}
-	})
-	mux.HandleFunc("/api/focus/tags", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/api/focus/tags", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			handler.GetTags(w, r)
@@ -347,7 +347,7 @@ func startServer() {
 		default:
 			sendMethodNotAllowed(w)
 		}
-	})
+	}))
 
 	// ---- 静态文件兜底路由 ----
 	// 所有未被 API 路由匹配的请求都交给静态文件服务器处理
