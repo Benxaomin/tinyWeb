@@ -5587,7 +5587,15 @@
             start: function() {
                 var self = this;
                 this.state = 'running';
-                this.startedAt = new Date();
+                var now = Date.now();
+                if (!this.startedAt) {
+                    // 首次启动：记录开始时间，清零暂停时长
+                    this.startedAt = now;
+                    this._pausedDuration = 0;
+                } else {
+                    // 从暂停恢复：累计暂停时长
+                    this._pausedDuration += (now - this._pausedAt);
+                }
 
                 // 更新 UI
                 var startBtn = document.getElementById('focusStartBtn');
@@ -5605,10 +5613,11 @@
                 // 禁用标签和时长选择
                 this._setConfigDisabled(true);
 
-                // 启动定时器（每秒tick）
+                // 启动定时器（500ms刷新，显示更流畅；用时间差计算所以不怕节流）
+                clearInterval(this.timerId);
                 this.timerId = setInterval(function() {
                     self.tick();
-                }, 1000);
+                }, 500);
             },
 
             // ---- 暂停 ----
@@ -5616,6 +5625,7 @@
                 this.state = 'paused';
                 clearInterval(this.timerId);
                 this.timerId = null;
+                this._pausedAt = Date.now();  // 记录暂停时间点
 
                 var startBtn = document.getElementById('focusStartBtn');
                 startBtn.className = 'focus-ctrl-btn start-btn';
@@ -5630,6 +5640,8 @@
                 this.timerId = null;
                 this.remaining = this.duration;
                 this.startedAt = null;
+                this._pausedDuration = 0;
+                this._pausedAt = null;
 
                 // 还原 UI
                 var startBtn = document.getElementById('focusStartBtn');
@@ -5649,9 +5661,13 @@
                 this._setConfigDisabled(false);
             },
 
-            // ---- 每秒执行 ----
+            // ---- 定时刷新 ----
             tick: function() {
-                this.remaining--;
+                // 用真实时间差计算剩余秒数，不再依赖 setInterval 触发次数
+                // 这样即使浏览器后台节流导致 tick 少调用，时间依然准确
+                var elapsed = (Date.now() - this.startedAt - this._pausedDuration) / 1000;
+                this.remaining = Math.max(0, Math.ceil(this.duration - elapsed));
+
                 if (this.remaining <= 0) {
                     this.remaining = 0;
                     this.finish();
@@ -6151,10 +6167,13 @@
             // ---- 绘制环形图（标签占比）----
             drawDoughnut: function() {
                 var self = this;
-                fetch(this.API_BASE + '/api/focus/today')
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/today')
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
-                        if (res.code !== 0 || !res.data) return;
+                        if (res.code !== 0 || !res.data) {
+                            self._drawEmptyDoughnut();
+                            return;
+                        }
                         var byTag = res.data.by_tag || [];
                         if (byTag.length === 0) {
                             self._drawEmptyDoughnut();
@@ -6250,7 +6269,7 @@
             // ---- 绘制水平条形图（近7天）----
             drawBarChart: function() {
                 var self = this;
-                fetch(this.API_BASE + '/api/focus/summary?days=7')
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/summary?days=7')
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (res.code !== 0 || !res.data) return;
