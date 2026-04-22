@@ -5925,11 +5925,7 @@
                         body: '恭喜！你完成了 ' + mins + ' 分钟的专注学习',
                         icon: '6eb3142e089146578ad0dacd790e1d2f.jpg',
                         tag: 'focus-complete',
-                        requireInteraction: true,  // 保持通知直到用户交互
-                        actions: [
-                            { action: 'continue', title: '继续专注' },
-                            { action: 'close', title: '关闭' }
-                        ]
+                        requireInteraction: true  // 保持通知直到用户交互
                     });
 
                     // 点击通知时打开网页
