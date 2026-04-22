@@ -5467,6 +5467,9 @@
                 this.loadTags();
                 this.loadTodayStats();
 
+                // 请求桌面通知权限
+                this._requestNotificationPermission();
+
                 // 报告按钮
                 document.getElementById('focusReportBtn').addEventListener('click', function() {
                     self.showReport();
@@ -5732,6 +5735,9 @@
                 // 播放"叮咚"提示音
                 this.playDingDong();
 
+                // 发送桌面通知
+                this._sendNotification(mins);
+
                 // 记住本次设置，供"继续专注"使用
                 this._lastDuration = this.duration;
                 this._lastTag = this.tag;
@@ -5888,6 +5894,59 @@
                 tagBtns.forEach(function(b) { b.disabled = disabled; b.style.opacity = disabled ? '0.5' : ''; });
                 var durBtns = document.querySelectorAll('#focusDurations .focus-duration-btn');
                 durBtns.forEach(function(b) { b.disabled = disabled; b.style.opacity = disabled ? '0.5' : ''; });
+            },
+
+            // ---- 请求桌面通知权限 ----
+            _requestNotificationPermission: function() {
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission().then(function(permission) {
+                        console.log('[FocusTimer] 桌面通知权限：' + permission);
+                    });
+                }
+            },
+
+            // ---- 发送桌面通知 ----
+            _sendNotification: function(mins) {
+                // 检查浏览器是否支持通知
+                if (!('Notification' in window)) {
+                    console.warn('[FocusTimer] 浏览器不支持桌面通知');
+                    return;
+                }
+                
+                // 检查权限
+                if (Notification.permission !== 'granted') {
+                    console.warn('[FocusTimer] 无桌面通知权限');
+                    return;
+                }
+
+                // 创建通知
+                try {
+                    var notification = new Notification('⏰ 专注时间结束', {
+                        body: '恭喜！你完成了 ' + mins + ' 分钟的专注学习',
+                        icon: '6eb3142e089146578ad0dacd790e1d2f.jpg',
+                        tag: 'focus-complete',
+                        requireInteraction: true,  // 保持通知直到用户交互
+                        actions: [
+                            { action: 'continue', title: '继续专注' },
+                            { action: 'close', title: '关闭' }
+                        ]
+                    });
+
+                    // 点击通知时打开网页
+                    notification.onclick = function() {
+                        window.focus();
+                        notification.close();
+                    };
+
+                    // 10秒后自动关闭
+                    setTimeout(function() {
+                        notification.close();
+                    }, 10000);
+
+                    console.log('[FocusTimer] 已发送桌面通知');
+                } catch (e) {
+                    console.warn('[FocusTimer] 发送通知失败：', e);
+                }
             },
 
             // ---- 加载标签列表 ----
@@ -6322,7 +6381,11 @@
                                 var day = String(d.getDate()).padStart(2, '0');
                                 var dateStr = year + '-' + month + '-' + day;
 
-                                var found = dailyStats.find(function(s) { return s.date === dateStr; });
+                                // 后端返回的日期格式可能是 "2026-04-21T00:00:00+08:00"，需要提取日期部分
+                                var found = dailyStats.find(function(s) {
+                                    var serverDate = s.date ? s.date.substring(0, 10) : '';
+                                    return serverDate === dateStr;
+                                });
                                 if (found) {
                                     dayData[j] = Math.round(found.total_seconds / 60);
                                 }
