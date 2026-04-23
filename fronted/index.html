@@ -5915,15 +5915,18 @@
                 
                 // 检查权限
                 if (Notification.permission !== 'granted') {
-                    console.warn('[FocusTimer] 无桌面通知权限');
+                    console.warn('[FocusTimer] 无桌面通知权限，当前权限：' + Notification.permission);
                     return;
                 }
 
                 // 创建通知
                 try {
+                    // 使用绝对路径的图标
+                    var iconUrl = window.location.origin + window.location.pathname.replace(/[^\/]+$/, '') + '6eb3142e089146578ad0dacd790e1d2f.jpg';
+                    
                     var notification = new Notification('⏰ 专注时间结束', {
                         body: '恭喜！你完成了 ' + mins + ' 分钟的专注学习',
-                        icon: '6eb3142e089146578ad0dacd790e1d2f.jpg',
+                        icon: iconUrl,
                         tag: 'focus-complete',
                         requireInteraction: true  // 保持通知直到用户交互
                     });
@@ -5942,6 +5945,21 @@
                     console.log('[FocusTimer] 已发送桌面通知');
                 } catch (e) {
                     console.warn('[FocusTimer] 发送通知失败：', e);
+                    // 如果发送失败，尝试不显示图标
+                    try {
+                        var fallbackNotification = new Notification('⏰ 专注时间结束', {
+                            body: '恭喜！你完成了 ' + mins + ' 分钟的专注学习',
+                            tag: 'focus-complete-fallback',
+                            requireInteraction: true
+                        });
+                        fallbackNotification.onclick = function() {
+                            window.focus();
+                            fallbackNotification.close();
+                        };
+                        setTimeout(function() { fallbackNotification.close(); }, 10000);
+                    } catch (e2) {
+                        console.warn('[FocusTimer] 降级通知也失败了：', e2);
+                    }
                 }
             },
 
