@@ -301,6 +301,8 @@
     
     // 开始游戏
     function startGame() {
+        // 先取消之前的动画帧，防止多个循环同时运行
+        cancelAnimationFrame(animationId);
         isPlaying = true;
         isPaused = false;
         startHint.classList.add('hide');
