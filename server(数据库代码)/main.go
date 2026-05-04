@@ -85,12 +85,6 @@ func main() {
 	}
 	fmt.Println("✅ todos + todo_history 表就绪")
 
-	// ---- HTML 页面管理功能：自动创建 pages 表 ----
-	if err := db.GetDB().AutoMigrate(&model.Page{}); err != nil {
-		log.Fatal("❌ 页面表自动迁移失败:", err)
-	}
-	fmt.Println("✅ pages 表就绪")
-
 	// ============================================================
 	// 步骤 3: 初始化测试数据库（tinyweb1_test）
 	// ============================================================
@@ -376,28 +370,6 @@ func startServer() {
 			sendMethodNotAllowed(w)
 		}
 	}))
-
-	// ---- HTML 页面管理接口（仅管理员可访问）----
-	database := db.GetDB()
-	mux.HandleFunc("/api/admin/pages", middleware.AuthMiddleware(middleware.AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			handler.GetPages(database)(w, r)
-		case http.MethodPost:
-			handler.CreatePage(database)(w, r)
-		default:
-			sendMethodNotAllowed(w)
-		}
-	})))
-	mux.HandleFunc("/api/admin/pages/", middleware.AuthMiddleware(middleware.AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodDelete {
-			handler.DeletePage(database)(w, r)
-		} else {
-			sendMethodNotAllowed(w)
-		}
-	})))
-	// 公开访问页面：/pages/:slug
-	mux.HandleFunc("/pages/", handler.ServePage(database))
 
 	// ---- 静态文件兜底路由 ----
 	// 所有未被 API 路由匹配的请求都交给静态文件服务器处理
