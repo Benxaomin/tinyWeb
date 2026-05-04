@@ -4,10 +4,10 @@
     var CANVAS_WIDTH = 400;
 
     var CANVAS_HEIGHT = 600;
-    var GRAVITY = 0.25;
-    var JUMP_STRENGTH = -6.5;
-    var PIPE_SPEED = 2;
-    var PIPE_SPAWN_RATE = 120; // 帧数
+    var GRAVITY = 0.06;
+    var JUMP_STRENGTH = -2.4;
+    var PIPE_SPEED = 1.2;
+    var PIPE_SPAWN_RATE = 180; // 帧数
     var PIPE_GAP = 140;
     var PIPE_WIDTH = 60;
     
@@ -301,6 +301,8 @@
     
     // 开始游戏
     function startGame() {
+        // 先取消之前的动画帧，防止多个循环同时运行
+        cancelAnimationFrame(animationId);
         isPlaying = true;
         isPaused = false;
         startHint.classList.add('hide');
@@ -367,8 +369,8 @@
     document.getElementById('gameCloseBtn').addEventListener('click', closeGame);
     document.getElementById('gameRestartBtn').addEventListener('click', restart);
     
-    // 画布点击/触摸
-    canvas.addEventListener('click', function(e) {
+    // 画布点击/触摸 - 使用mousedown响应更快
+    canvas.addEventListener('mousedown', function(e) {
         e.preventDefault();
         jump();
     });
