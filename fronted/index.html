@@ -2110,6 +2110,22 @@
             color: #fff;
         }
 
+        .auth-admin-btn {
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            background: transparent;
+            color: #6c5ce7;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-admin-btn:hover {
+            background: rgba(108, 92, 231, 0.1);
+            border-color: #6c5ce7;
+        }
+
         .auth-logout-btn {
             padding: 4px 10px;
             border-radius: 12px;
@@ -5522,11 +5538,15 @@
                 var roleBadge = user.role === 'admin'
                     ? '<span class="auth-role-badge">管理员</span>'
                     : '';
+                var adminBtn = user.role === 'admin'
+                    ? '<button id="adminBtn" class="auth-admin-btn" title="文件管理"><i class="fa-solid fa-folder-open"></i></button>'
+                    : '';
                 area.innerHTML =
                     '<div class="auth-user-info">' +
                         '<span class="auth-username">' + this.escapeHtml(user.username) + '</span>' +
                         roleBadge +
                     '</div>' +
+                    adminBtn +
                     '<button id="logoutBtn" class="auth-logout-btn">退出</button>';
 
                 // 绑定退出按钮
@@ -5534,6 +5554,13 @@
                 document.getElementById('logoutBtn').addEventListener('click', function() {
                     self.logout();
                 });
+
+                // 绑定管理员按钮
+                if (user.role === 'admin') {
+                    document.getElementById('adminBtn').addEventListener('click', function() {
+                        window.location.href = 'file-manager.html';
+                    });
+                }
 
                 console.log('[Auth] 已登录:', user.username, '(' + user.role + ')');
             },

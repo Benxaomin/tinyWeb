@@ -152,7 +152,7 @@ func RecordVisit(w http.ResponseWriter, r *http.Request) {
 	// 返回响应
 	responseData := map[string]interface{}{
 		"is_first_visit": isFirstVisit,
-		"visit_count":    existing.VisitCount + 1, // 更新后的计数
+		"visit_count":    existing.VisitCount + 1, // 更新后的计visit_count
 	}
 	if isFirstVisit {
 		responseData["visit_count"] = 1 // 首次访问，当前计数为 1
@@ -192,7 +192,7 @@ func GetVisitStats(w http.ResponseWriter, r *http.Request) {
 	database.Model(&model.VisitStats{}).Select("COALESCE(SUM(visit_count), 0)").Scan(&stats.TotalVisits)
 
 	// 统计 2：独立访客数 = COUNT(DISTINCT visitor_ip)
-	database.Model(&model.VisitStats{}).Select("COUNT(*)").Scan(&stats.UniqueVisitors)
+	database.Model(&model.VisitStats{}).Select("COUNT(DISTINCT visitor_ip)").Scan(&stats.UniqueVisitors)
 
 	// 统计 3：最后访问时间 = MAX(last_visit_at)
 	var lastVisit *time.Time

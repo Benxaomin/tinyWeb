@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件管理 - TinyWeb1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-cover: rgba(0, 0, 0, 0.4);
+            --card-bg: rgb(20 20 30 / 60%);
+            --card-hover-bg: rgb(30 30 45 / 65%);
+            --text-main: #c8c0b0;
+            --text-sub: rgba(200, 192, 176, 0.55);
+            --text-dim: rgba(200, 192, 176, 0.35);
+            --accent: #e8a86d;
+            --accent-glow: rgba(232, 168, 109, 0.25);
+            --radius: 6px;
+            --divider-bg: rgba(255,255,255,0.06);
+        }
+
+        html.light {
+            --bg-cover: rgba(225, 215, 195, 0.7);
+            --card-bg: rgb(240 232 218 / 60%);
+            --card-hover-bg: rgb(240 232 218 / 72%);
+            --text-main: #3b3226;
+            --text-sub: rgba(59, 50, 38, 0.6);
+            --text-dim: rgba(59, 50, 38, 0.38);
+            --accent: #b87333;
+            --accent-glow: rgba(184, 115, 51, 0.18);
+            --divider-bg: rgba(80, 60, 30, 0.1);
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            background: #1a1a2e;
+            transition: background-color 0.6s ease;
+        }
+
+        html.light body { background: #f5eee3; }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--divider-bg);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header h1 i { color: var(--accent); }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-sub);
+            border: 1px solid var(--divider-bg);
+        }
+
+        .btn-secondary:hover {
+            background: var(--card-hover-bg);
+            color: var(--text-main);
+        }
+
+        .btn-danger {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--divider-bg);
+        }
+
+        html.light .card {
+            border: 1px solid rgba(180, 160, 130, 0.25);
+            box-shadow: 0 1px 4px rgba(80, 60, 30, 0.06);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--divider-bg);
+            border-radius: var(--radius);
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(232, 168, 109, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .upload-area h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-area p {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .upload-form {
+            display: none;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-sub);
+            font-size: 0.85rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--divider-bg);
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .file-list {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .file-list th,
+        .file-list td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid var(--divider-bg);
+        }
+
+        .file-list th {
+            color: var(--text-sub);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .file-list tr:hover {
+            background: var(--card-hover-bg);
+        }
+
+        .file-list td {
+            font-size: 0.9rem;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(108, 92, 231, 0.1);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c5ce7;
+            margin-right: 1rem;
+        }
+
+        .file-name {
+            display: flex;
+            align-items: center;
+        }
+
+        .file-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-title {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .file-slug {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            justify-content: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-dim);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .preview-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .preview-modal.show { display: flex; }
+
+        .preview-content {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--divider-bg);
+        }
+
+        .preview-header h3 {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 600px;
+            background: #fff;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-dim);
+        }
+
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--divider-bg);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-left: 4px solid #00b894; }
+        .toast.error { border-left: 4px solid #e74c3c; }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+            .file-list { display: block; overflow-x: auto; }
+            .preview-frame { height: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fa-solid fa-folder-open"></i> 文件管理</h1>
+            <div class="header-actions">
+                <a href="index.html" class="btn btn-secondary">
+                    <i class="fa-solid fa-arrow-left"></i> 返回首页
+                </a>
+                <button class="btn btn-primary" onclick="showUploadForm()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> 上传文件
+                </button>
+            </div>
+        </div>
+
+        <!-- 上传表单 -->
+        <div class="card upload-form" id="uploadForm">
+            <h3 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-upload"></i> 上传 HTML 文件</h3>
+            <div class="form-group">
+                <label>页面标题</label>
+                <input type="text" id="fileTitle" placeholder="例如：我的笔记">
+            </div>
+            <div class="form-group">
+                <label>URL 标识 (slug)</label>
+                <input type="text" id="fileSlug" placeholder="例如：my-notes (只允许小写字母、数字、横线)">
+            </div>
+            <div class="form-group">
+                <label>选择 HTML 文件</label>
+                <input type="file" id="fileInput" accept=".html">
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" onclick="uploadFile()">
+                    <i class="fa-solid fa-check"></i> 确认上传
+                </button>
+                <button class="btn btn-secondary" onclick="hideUploadForm()">
+                    <i class="fa-solid fa-xmark"></i> 取消
+                </button>
+            </div>
+        </div>
+
+        <!-- 拖拽上传区域 -->
+        <div class="upload-area" id="dropZone" onclick="showUploadForm()">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <h3>点击或拖拽上传 HTML 文件</h3>
+            <p>支持 .html 格式，最大 10MB</p>
+        </div>
+
+        <!-- 文件列表 -->
+        <div class="card">
+            <div class="loading" id="loading">
+                <i class="fa-solid fa-circle-notch"></i>
+                <p>加载中...</p>
+            </div>
+            <table class="file-list" id="fileList" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>文件名</th>
+                        <th>大小</th>
+                        <th>上传者</th>
+                        <th>上传时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="fileListBody">
+                </tbody>
+            </table>
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fa-regular fa-folder-open"></i>
+                <h3>暂无文件</h3>
+                <p>点击上方上传按钮添加文件</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预览弹窗 -->
+    <div class="preview-modal" id="previewModal" onclick="closePreview(event)">
+        <div class="preview-content" onclick="event.stopPropagation()">
+            <div class="preview-header">
+                <h3><i class="fa-solid fa-eye"></i> 预览</h3>
+                <button class="btn btn-secondary btn-icon" onclick="closePreview()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <iframe class="preview-frame" id="previewFrame"></iframe>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toastMsg">操作成功</span>
+    </div>
+
+    <script>
+        const API_BASE = '/api/admin/pages';
+        let files = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFiles();
+            setupDragDrop();
+        });
+
+        // 加载文件列表
+        function loadFiles() {
+            const token = localStorage.getItem('tinyweb_token');
+            if (!token) {
+                showToast('请先登录', 'error');
+                setTimeout(() => window.location.href = 'index.html', 1500);
+                return;
+            }
+
+            fetch(API_BASE, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(r => r.json())
+            .then(res => {
+                document.getElementById('loading').style.display = 'none';
+                if (res.code === 0) {
+                    files = res.data || [];
+                    renderFileList();
+                } else if (res.code === 403) {
+                    showToast('权限不足', 'error');
+                } else {
+                    showToast(res.message || '加载失败', 'error');
+                }
+            })
+            .catch(err => {
+                document.getElementById('loading').style.display = 'none';
+                showToast('网络错误', 'error');
+            });
+        }
+
+        // 渲染文件列表
+        function renderFileList() {
+            const tbody = document.getElementById('fileListBody');
+            const table = document.getElementById('fileList');
+            const empty = document.getElementById('emptyState');
+
+            if (files.length === 0) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            empty.style.display = 'none';
+            tbody.innerHTML = '';
+
+            files.forEach(file => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="file-name">
+                            <div class="file-icon"><i class="fa-brands fa-html5"></i></div>
+                            <div class="file-info">
+                                <span class="file-title">${escapeHtml(file.title)}</span>
+                                <span class="file-slug">/pages/${file.slug}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${file.size_human}</td>
+                    <td>${escapeHtml(file.upload_by)}</td>
+                    <td>${formatDate(file.created_at)}</td>
+                    <td>
+                        <div class="file-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="previewFile('${file.slug}')" title="预览">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <a href="/pages/${file.slug}" target="_blank" class="btn btn-secondary btn-sm" title="访问">
+                                <i class="fa-solid fa-external-link-alt"></i>
+                            </a>
+                            <button class="btn btn-danger btn-sm" onclick="deleteFile(${file.id})" title="删除">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 显示上传表单
+        function showUploadForm() {
+            document.getElementById('uploadForm').style.display = 'block';
+            document.getElementById('dropZone').style.display = 'none';
+            document.getElementById('fileTitle').focus();
+        }
+
+        // 隐藏上传表单
+        function hideUploadForm() {
+            document.getElementById('uploadForm').style.display = 'none';
+            document.getElementById('dropZone').style.display = 'block';
+            document.getElementById('fileTitle').value = '';
+            document.getElementById('fileSlug').value = '';
+            document.getElementById('fileInput').value = '';
+        }
+
+        // 上传文件
+        function uploadFile() {
+            const title = document.getElementById('fileTitle').value.trim();
+            const slug = document.getElementById('fileSlug').value.trim().toLowerCase();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!title) {
+                showToast('请输入页面标题', 'error');
+                return;
+            }
+            if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+                showToast('URL标识只能包含小写字母、数字和横线', 'error');
+                return;
+            }
+            if (!file) {
+                showToast('请选择文件', 'error');
+                return;
+            }
+            if (!file.name.endsWith('.html')) {
+                showToast('只支持 .html 文件', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('slug', slug);
+            formData.append('file', file);
+
+            const token = localStorage.getItem('tinyweb_token');
+            fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.code === 0) {
+                    showToast('上传成功');
+                    hideUploadForm();
+                    loadFiles();
+                } else {
+                    showToast(res.message || '上传失败', 'error');
+                }
+            })
+            .catch(err => {
+                showToast('网络错误', 'error');
+            });
+        }
+
+        // 删除文件
+        function deleteFile(id) {
+            if (!confirm('确定要删除这个文件吗？')) return;
+
+            const token = localStorage.getItem('tinyweb_token');
+            fetch(API_BASE + '/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.code === 0) {
+                    showToast('删除成功');
+                    loadFiles();
+                } else {
+                    showToast(res.message || '删除失败', 'error');
+                }
+            })
+            .catch(err => {
+                showToast('网络错误', 'error');
+            });
+        }
+
+        // 预览文件
+        function previewFile(slug) {
+            document.getElementById('previewFrame').src = '/pages/' + slug;
+            document.getElementById('previewModal').classList.add('show');
+        }
+
+        // 关闭预览
+        function closePreview(event) {
+            if (!event || event.target.id === 'previewModal') {
+                document.getElementById('previewModal').classList.remove('show');
+                document.getElementById('previewFrame').src = '';
+            }
+        }
+
+        // 设置拖拽上传
+        function setupDragDrop() {
+            const dropZone = document.getElementById('dropZone');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.style.borderColor = 'var(--accent)';
+                    dropZone.style.background = 'rgba(232, 168, 109, 0.1)';
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.style.borderColor = 'var(--divider-bg)';
+                    dropZone.style.background = 'transparent';
+                });
+            });
+
+            dropZone.addEventListener('drop', handleDrop);
+        }
+
+        function handleDrop(e) {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.html')) {
+                    document.getElementById('fileInput').files = files;
+                    showUploadForm();
+                    // 尝试从文件名提取标题
+                    const name = file.name.replace('.html', '');
+                    document.getElementById('fileSlug').value = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                } else {
+                    showToast('只支持 .html 文件', 'error');
+                }
+            }
+        }
+
+        // 显示 Toast
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = toast.querySelector('i');
+            const text = document.getElementById('toastMsg');
+            
+            text.textContent = msg;
+            toast.className = 'toast ' + type;
+            
+            if (type === 'error') {
+                icon.className = 'fa-solid fa-circle-exclamation';
+            } else {
+                icon.className = 'fa-solid fa-circle-check';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 转义 HTML
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // ESC 关闭预览
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePreview();
+        });
+    </script>
+</body>
+</html>

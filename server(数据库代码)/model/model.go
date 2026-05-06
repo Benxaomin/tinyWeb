@@ -283,6 +283,59 @@ type GuestbookListResponse struct {
 }
 
 // ============================================================
+// HTML 页面管理相关模型（管理员共享文件库功能）
+// ============================================================
+
+// Page HTML 页面元数据表
+// 对应数据库 pages 表，存储管理员上传的 HTML 文件信息
+//
+// 设计思路：
+//   - 文件实际存储在磁盘 uploads/pages/ 目录，数据库存元数据
+//   - Slug 用于 URL 访问（如 /pages/my-page），只允许小写字母、数字、横线
+//   - UploadBy 冗余存储用户名，方便前端显示而不需要 JOIN 查询
+//   - 多个管理员可以上传/查看/删除所有页面（共享文件库）
+//
+// 数据库表结构：
+//
+//	| 列名       | 类型          | 说明                        |
+//	|------------|---------------|----------------------------|
+//	| id         | bigint unsigned| 自增主键                    |
+//	| created_at | datetime(3)   | 创建时间                    |
+//	| updated_at | datetime(3)   | 更新时间                    |
+//	| deleted_at | datetime(3)   | 软删除时间                  |
+//	| title      | varchar(100)  | 页面标题                    |
+//	| slug       | varchar(50)   | URL标识（唯一索引）          |
+//	| file_name  | varchar(100)  | 磁盘文件名                  |
+//	| size       | bigint        | 文件大小(bytes)             |
+//	| upload_by  | varchar(50)   | 上传者用户名                |
+type Page struct {
+	gorm.Model
+	Title    string `gorm:"type:varchar(100);not null" json:"title"`    // 页面显示标题
+	Slug     string `gorm:"type:varchar(50);uniqueIndex;not null" json:"slug"` // URL标识（如 "my-page"）
+	FileName string `gorm:"type:varchar(100);not null" json:"file_name"` // 磁盘存储文件名
+	Size     int64  `gorm:"not null" json:"size"`                        // 文件大小（字节）
+	UploadBy string `gorm:"type:varchar(50);not null" json:"upload_by"`  // 上传者用户名
+}
+
+// TableName 指定 Page 对应的数据库表名
+func (Page) TableName() string {
+	return "pages"
+}
+
+// PageResponse 页面列表响应格式
+// 前端 GET /api/admin/pages 的返回数据项
+type PageResponse struct {
+	ID        uint      `json:"id"`         // 页面ID
+	Title     string    `json:"title"`      // 页面标题
+	Slug      string    `json:"slug"`       // URL标识
+	FileName  string    `json:"file_name"`  // 文件名
+	Size      int64     `json:"size"`       // 文件大小（字节）
+	SizeHuman string    `json:"size_human"` // 格式化的大小（如 "1.5 KB"）
+	UploadBy  string    `json:"upload_by"`  // 上传者
+	CreatedAt time.Time `json:"created_at"` // 上传时间
+}
+
+// ============================================================
 // 专注时间相关模型（Focus Time 功能新增）
 // ============================================================
 
