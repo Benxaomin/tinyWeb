@@ -199,9 +199,18 @@ func GetPages(database *gorm.DB) http.HandlerFunc {
 // DELETE /api/admin/pages/:id
 func DeletePage(database *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		idStr := vars["id"]
-		id, err := strconv.ParseUint(idStr, 10, 32)
+		// 手动解析路径 /api/admin/pages/:id
+		pathStr := strings.TrimPrefix(r.URL.Path, "/api/admin/pages/")
+		pathStr = strings.TrimSpace(pathStr)
+		if pathStr == "" {
+			sendJSON(w, http.StatusBadRequest, model.APIResponse{
+				Code:    400,
+				Message: "无效的文件ID",
+			})
+			return
+		}
+		
+		id, err := strconv.ParseUint(pathStr, 10, 32)
 		if err != nil {
 			sendJSON(w, http.StatusBadRequest, model.APIResponse{
 				Code:    400,
