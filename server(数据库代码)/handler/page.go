@@ -27,7 +27,6 @@ import (
 	"tinyweb1/middleware"
 	"tinyweb1/model"
 
-	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
