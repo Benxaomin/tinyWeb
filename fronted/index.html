@@ -5892,9 +5892,13 @@
                 this.updateRing(1);
                 this.updateDisplay();
 
-                // 加载标签和今日统计
-                this.loadTags();
-                this.loadTodayStats();
+                // 注意：页面加载时不自动加载标签和统计数据（避免未登录时弹窗）
+                // 这些数据会在用户点击打开面板时加载（showPanel方法中）
+                // 如果有登录token，可以尝试静默加载
+                if (AuthManager.getToken()) {
+                    this.loadTags();
+                    this.loadTodayStats();
+                }
 
                 // 请求桌面通知权限
                 this._requestNotificationPermission();
