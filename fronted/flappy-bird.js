@@ -28,6 +28,8 @@
     var isPlaying = false;
     var isPaused = false;
     var animationId = null;
+    var gameStartTime = null;  // 游戏开始时间
+    var pipesPassed = 0;       // 通过的管道数量
     
     // 配色方案（根据主题自动适应）
     function getColors() {
@@ -305,8 +307,11 @@
         cancelAnimationFrame(animationId);
         isPlaying = true;
         isPaused = false;
+        gameStartTime = Date.now();  // 记录游戏开始时间
         startHint.classList.add('hide');
         gameOverScreen.classList.remove('show');
+        // 恢复画布交互
+        canvas.style.pointerEvents = 'auto';
         resetGame();
         gameLoop();
     }
@@ -319,21 +324,97 @@
         bird.wingAngle = 0;
         pipes = [];
         score = 0;
+        pipesPassed = 0;
         frameCount = 0;
         gameScore.textContent = '0';
+    }
+    
+    // 格式化游戏时长为 mm:ss
+    function formatGameTime(ms) {
+        var seconds = Math.floor(ms / 1000);
+        var mins = Math.floor(seconds / 60);
+        var secs = seconds % 60;
+        return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+    
+    // 历史最高分
+    var highScore = 0;
+    
+    // 从本地存储加载最高分
+    function loadHighScore() {
+        var saved = localStorage.getItem('flappyHighScore');
+        if (saved) {
+            highScore = parseInt(saved, 10);
+        }
+    }
+    
+    // 保存最高分
+    function saveHighScore() {
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('flappyHighScore', highScore);
+        }
     }
     
     // 游戏结束
     function gameOver() {
         isPlaying = false;
         cancelAnimationFrame(animationId);
+        
+        // 更新并保存最高分
+        saveHighScore();
+        
+        // 显示结果展示页
+        showResultScreen();
+    }
+    
+    // 显示结果展示页
+    function showResultScreen() {
+        // 计算游戏时长
+        var gameDuration = gameStartTime ? Date.now() - gameStartTime : 0;
+        
         finalScore.textContent = score;
+        
+        // 更新最高分显示
+        var highScoreEl = document.getElementById('highScore');
+        var newRecordEl = document.getElementById('newRecord');
+        var pipesPassedEl = document.getElementById('pipesPassed');
+        var gameTimeEl = document.getElementById('gameTime');
+        
+        if (highScoreEl) {
+            highScoreEl.textContent = highScore;
+        }
+        
+        // 显示通过的管道数（得分就是通过的管道数）
+        if (pipesPassedEl) {
+            pipesPassedEl.textContent = score;
+        }
+        
+        // 显示游戏时长
+        if (gameTimeEl) {
+            gameTimeEl.textContent = formatGameTime(gameDuration);
+        }
+        
+        // 显示"新纪录"标记（如果破纪录了）
+        if (newRecordEl) {
+            if (score > 0 && score > highScore) {
+                newRecordEl.style.display = 'inline-block';
+            } else {
+                newRecordEl.style.display = 'none';
+            }
+        }
+        
+        // 禁用游戏画布交互，防止空格键误触
+        canvas.style.pointerEvents = 'none';
+        
         gameOverScreen.classList.add('show');
     }
     
     // 重新开始
     function restart() {
         gameOverScreen.classList.remove('show');
+        // 恢复画布交互
+        canvas.style.pointerEvents = 'auto';
         startGame();
     }
     
@@ -368,6 +449,22 @@
     
     document.getElementById('gameCloseBtn').addEventListener('click', closeGame);
     document.getElementById('gameRestartBtn').addEventListener('click', restart);
+    
+    // 关闭结果页按钮 - 只关闭结果展示，回到准备状态
+    var closeResultBtn = document.getElementById('gameCloseResultBtn');
+    if (closeResultBtn) {
+        closeResultBtn.addEventListener('click', function() {
+            gameOverScreen.classList.remove('show');
+            // 恢复画布交互
+            canvas.style.pointerEvents = 'auto';
+            // 重置到准备状态（显示开始提示）
+            isPlaying = false;
+            isPaused = false;
+            resetGame();
+            draw();
+            startHint.classList.remove('hide');
+        });
+    }
     
     // 画布点击/触摸 - 使用mousedown响应更快
     canvas.addEventListener('mousedown', function(e) {
