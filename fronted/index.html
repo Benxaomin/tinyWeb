@@ -5530,35 +5530,40 @@
                 return fetch(url, options);
             },
 
-            // ---- 检查登录状态 ----
-            checkAuthStatus: function() {
-                var self = this;
-                var token = this.getToken();
+        // ---- 检查登录状态 ----
+        // 注意：此方法只在页面加载时静默检查，不会自动弹出登录框
+        // 登录弹窗只在以下情况触发：
+        //   1. 用户点击右上角"登录"/"注册"按钮
+        //   2. 用户点击需要登录的功能（备忘录、专注计时器）且未登录时
+        //   3. API 请求返回 401 未授权时
+        checkAuthStatus: function() {
+            var self = this;
+            var token = this.getToken();
 
-                if (!token) {
-                    this.showLoggedOut();
-                    return;
-                }
+            if (!token) {
+                this.showLoggedOut();
+                return;
+            }
 
-                // 用 token 请求 /api/auth/me 验证是否有效
-                this.fetchWithAuth(this.API_BASE + '/api/auth/me')
-                    .then(function(r) { return r.json(); })
-                    .then(function(res) {
-                        if (res.code === 0 && res.data) {
-                            // token 有效，显示已登录状态
-                            self.user = res.data;
-                            self.showLoggedIn(res.data);
-                        } else {
-                            // token 无效或过期
-                            self.clearToken();
-                            self.showLoggedOut();
-                        }
-                    })
-                    .catch(function() {
-                        // 网络错误，保持当前状态
-                        console.warn('[Auth] 检查登录状态失败');
-                    });
-            },
+            // 用 token 请求 /api/auth/me 验证是否有效
+            this.fetchWithAuth(this.API_BASE + '/api/auth/me')
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.code === 0 && res.data) {
+                        // token 有效，显示已登录状态
+                        self.user = res.data;
+                        self.showLoggedIn(res.data);
+                    } else {
+                        // token 无效或过期，静默清理，不弹窗打扰用户
+                        self.clearToken();
+                        self.showLoggedOut();
+                    }
+                })
+                .catch(function() {
+                    // 网络错误，保持当前状态，不弹窗
+                    console.warn('[Auth] 检查登录状态失败');
+                });
+        },
 
             // ---- 显示弹窗 ----
             showModal: function(mode) {
