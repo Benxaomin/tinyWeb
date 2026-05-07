@@ -4889,24 +4889,42 @@
 
             // ============================================================
             // 归档逻辑（已迁移到服务端）
-            // 原方案：前端定时检查跨天 → 写入 localStorage
-            // 新方案：前端检测跨天后调用 POST /api/todos/archive
-            // 服务端负责将当天任务复制到历史表再清空原表
+            // 逻辑：检测跨天（从日期A变为日期B），将日期A的任务归档
+            // 注意：只有未完成的任务会保留，已完成的任务会被归档到历史
+            // 归档时间：新的一天开始后的前2个小时（0:00-2:00）进行归档
             // ============================================================
             function checkAndArchive() {
+                var now = new Date();
                 var today = getTodayStr();
                 var lastArchive = localStorage.getItem(ARCHIVE_DATE_KEY);
-                if (lastArchive !== today) {
-                    // 调用服务端归档接口
+                
+                // 获取当前小时（0-23）
+                var currentHour = now.getHours();
+                
+                // 只有当时间在 0:00-2:00 之间时才进行归档（新的一天开始的2小时内）
+                // 且需要检测到日期变化（lastArchive !== today）
+                if (currentHour >= 0 && currentHour < 2 && lastArchive !== today) {
+                    console.log('检测到跨天，正在归档前一天任务...');
+                    
+                    // 调用服务端归档接口（归档昨天的已完成任务）
                     apiRequest('/api/todos/archive', { method: 'POST' })
                         .then(function(result) {
-                            if (result.ok && result.data && result.data.archived_count > 0) {
-                                console.log('已归档 ' + result.data.archived_count + ' 条任务');
+                            if (result.ok && result.data) {
+                                console.log('归档完成：' + result.data.archived_count + ' 条已完成的任务已归档');
+                                if (result.data.kept_count > 0) {
+                                    console.log('保留未完成任务：' + result.data.kept_count + ' 条');
+                                }
+                            } else {
+                                console.log('归档调用完成');
                             }
-                            // 无论是否成功，都更新标记避免重复归档
+                            // 更新标记避免重复归档
                             localStorage.setItem(ARCHIVE_DATE_KEY, today);
                             // 归档后刷新当前列表
                             refreshAndRender();
+                        })
+                        .catch(function(err) {
+                            console.warn('归档请求失败，下次再试:', err);
+                            // 不更新标记，下次继续尝试
                         });
                 }
             }
@@ -5615,7 +5633,7 @@
 
                 // 前端校验
                 if (username.length < 3) {
-                    this.showError('用户名至少3个字符');
+                    this.showError('用户名至少3个字
                     return;
                 }
                 if (password.length < 6) {

@@ -246,8 +246,9 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
 // POST /api/todos/archive - 归档当天的任务
 // ============================================================
 
-// ArchiveTodos 将当前用户的所有待办任务复制到历史归档表中，然后清空原表中的这些记录
-// 触发时机：前端每日首次加载时调用
+// ArchiveTodos 将当前用户已完成的待办任务归档到历史表，并保留未完成的任务
+// 归档逻辑：只归档已完成(done=true)的任务，未完成的任务保留在todo表中
+// 触发时机：前端检测到跨天（0:00-2:00）时调用
 func ArchiveTodos(w http.ResponseWriter, r *http.Request) {
 	userID, ok := getTodoUserID(r)
 	if !ok {
@@ -258,15 +259,27 @@ func ArchiveTodos(w http.ResponseWriter, r *http.Request) {
 	database := db.GetDB()
 	today := time.Now().Format("2006-01-02")
 
-	// 查询当前用户所有待归档的任务
+	// 查询当前用户所有已完成的任务（只归档已完成的）
 	var tasks []model.Todo
-	if err := database.Where("user_id = ?", userID).Order("sort_order ASC").Find(&tasks).Error; err != nil {
+	if err := database.Where("user_id = ? AND done = ?", userID, true).Order("sort_order ASC").Find(&tasks).Error; err != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "查询待归档任务失败"))
 		return
 	}
 
+	// 查询未完成的任务数量
+	var keptCount int64
+	if err := database.Model(&model.Todo{}).Where("user_id = ? AND done = ?", userID, false).Count(&keptCount).Error; err != nil {
+		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "统计未完成任务失败"))
+		return
+	}
+
+	// 如果没有已完成的任务需要归档，直接返回
 	if len(tasks) == 0 {
-		sendJSON(w, http.StatusOK, model.SuccessResponse(map[string]int{"archived_count": 0}))
+		sendJSON(w, http.StatusOK, model.SuccessResponse(map[string]interface{}{
+			"archived_count": 0,
+			"kept_count":     keptCount,
+			"message":        "没有已完成的任务需要归档",
+		}))
 		return
 	}
 
@@ -277,7 +290,7 @@ func ArchiveTodos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 批量插入到历史表
+	// 批量插入到历史表（只插已完成的）
 	for _, t := range tasks {
 		history := model.TodoHistory{
 			UserID:      t.UserID,
@@ -293,10 +306,10 @@ func ArchiveTodos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 删除已归档的任务
-	if err := tx.Where("user_id = ?", userID).Delete(&model.Todo{}).Error; err != nil {
+	// 删除已归档的任务（只删已完成的）
+	if err := tx.Where("user_id = ? AND done = ?", userID, true).Delete(&model.Todo{}).Error; err != nil {
 		tx.Rollback()
-		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "清理原任务失败"))
+		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "清理已归档任务失败"))
 		return
 	}
 
@@ -305,7 +318,11 @@ func ArchiveTodos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendJSON(w, http.StatusOK, model.SuccessResponse(map[string]int{"archived_count": len(tasks)}))
+	sendJSON(w, http.StatusOK, model.SuccessResponse(map[string]interface{}{
+		"archived_count": len(tasks),
+		"kept_count":     keptCount,
+		"message":        "归档完成",
+	}))
 }
 
 // ============================================================
