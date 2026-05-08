@@ -4106,11 +4106,25 @@
             <div class="focus-chart-legend" id="focusDoughnutLegend"></div>
         </div>
 
-        <!-- 条形图：近7天趋势 -->
+        <!-- 条形图：近7天趋势（支持左右切换查看历史） -->
         <div class="focus-report-section">
-            <div class="focus-report-label">近7天趋势</div>
+            <div class="focus-report-label" style="display:flex;justify-content:space-between;align-items:center;">
+                <span id="focusBarChartTitle">近7天趋势</span>
+                <div class="focus-chart-nav" style="display:flex;align-items:center;gap:6px;">
+                    <button class="focus-chart-nav-btn" id="focusChartPrev" title="上一个七天 (←)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--avatar-border);background:var(--social-bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.7rem;transition:all 0.2s;">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span class="focus-chart-nav-text" id="focusChartNavText" style="font-size:0.7rem;color:var(--text-sub);min-width:50px;text-align:center;">本周</span>
+                    <button class="focus-chart-nav-btn" id="focusChartNext" title="下一个七天 (→)" disabled style="width:22px;height:22px;border-radius:50%;border:1px solid var(--avatar-border);background:var(--social-bg);color:var(--text-sub);cursor:not-allowed;display:flex;align-items:center;justify-content:center;font-size:0.7rem;transition:all 0.2s;opacity:0.4;">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
             <div class="focus-chart-wrap">
                 <canvas id="focusBarChart" width="320" height="160"></canvas>
+            </div>
+            <div class="focus-chart-hint" style="font-size:0.65rem;color:var(--text-dim);text-align:center;margin-top:6px;">
+                按 <kbd style="font-family:monospace;background:var(--social-bg);padding:1px 4px;border-radius:3px;">←</kbd> <kbd style="font-family:monospace;background:var(--social-bg);padding:1px 4px;border-radius:3px;">→</kbd> 方向键切换周次（最多查看一个月）
             </div>
         </div>
 
@@ -6619,6 +6633,9 @@
             _doughnutChart: null,
             _barChart: null,
 
+            // 条形图周次偏移（0=本周, -7=上周, -14=上上周）
+            _chartWeekOffset: 0,
+
             // ---- 切换报告面板 ----
             toggleReport: function() {
                 var bubble = document.getElementById('focusReportBubble');
@@ -6666,11 +6683,101 @@
                 mini1.classList.add('show');
                 mini2.classList.add('show');
 
+                // 初始化周次偏移
+                this._chartWeekOffset = 0;
+                this._updateChartNavUI();
+
                 // 加载数据并绘图
                 this.loadTodayStats();
                 this.drawDoughnut();
                 this.drawBarChart();
                 this.loadHistory();
+
+                // 绑定导航按钮事件
+                this._bindChartNavEvents();
+            },
+
+            // ---- 绑定条形图导航事件 ----
+            _chartNavEventsBound: false,
+            _bindChartNavEvents: function() {
+                if (this._chartNavEventsBound) return;
+                var self = this;
+
+                document.getElementById('focusChartPrev').addEventListener('click', function() {
+                    self._prevChartWeek();
+                });
+                document.getElementById('focusChartNext').addEventListener('click', function() {
+                    self._nextChartWeek();
+                });
+
+                // 键盘方向键支持
+                document.addEventListener('keydown', function(e) {
+                    // 只在报告面板显示时响应
+                    var bubble = document.getElementById('focusReportBubble');
+                    if (!bubble.classList.contains('show')) return;
+
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        self._prevChartWeek();
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        self._nextChartWeek();
+                    }
+                });
+
+                this._chartNavEventsBound = true;
+            },
+
+            // ---- 切换到上一个周 ----
+            _prevChartWeek: function() {
+                // 最多向左切换2次（共3周：本周、上周、上上周）
+                if (this._chartWeekOffset > -14) {
+                    this._chartWeekOffset -= 7;
+                    this._updateChartNavUI();
+                    this.drawBarChart();
+                }
+            },
+
+            // ---- 切换到下一个周 ----
+            _nextChartWeek: function() {
+                if (this._chartWeekOffset < 0) {
+                    this._chartWeekOffset += 7;
+                    this._updateChartNavUI();
+                    this.drawBarChart();
+                }
+            },
+
+            // ---- 更新导航按钮状态 ----
+            _updateChartNavUI: function() {
+                var prevBtn = document.getElementById('focusChartPrev');
+                var nextBtn = document.getElementById('focusChartNext');
+                var navText = document.getElementById('focusChartNavText');
+                var titleEl = document.getElementById('focusBarChartTitle');
+
+                // 更新按钮状态
+                prevBtn.disabled = this._chartWeekOffset <= -14;
+                nextBtn.disabled = this._chartWeekOffset >= 0;
+
+                // 更新样式
+                prevBtn.style.opacity = prevBtn.disabled ? '0.4' : '1';
+                prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
+                nextBtn.style.opacity = nextBtn.disabled ? '0.4' : '1';
+                nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
+
+                // 更新文本
+                var weekNames = {
+                    0: '本周',
+                    '-7': '上周',
+                    '-14': '上上周'
+                };
+                navText.textContent = weekNames[this._chartWeekOffset] || '本周';
+
+                // 更新标题
+                if (this._chartWeekOffset === 0) {
+                    titleEl.textContent = '近7天趋势';
+                } else {
+                    titleEl.textContent = weekNames[this._chartWeekOffset] + '详情';
+                }
             },
 
             // ---- 隐藏报告泡泡面板 ----
@@ -6807,7 +6914,30 @@
             // ---- 绘制水平条形图（近7天）----
             drawBarChart: function() {
                 var self = this;
-                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/summary?days=7')
+                // 根据偏移量计算要请求的日期范围
+                var endOffset = this._chartWeekOffset; // 结束日期偏移（0=今天）
+                var startOffset = endOffset - 6;        // 开始日期偏移（往前6天）
+
+                // 构建日期范围参数
+                var endDate = new Date();
+                endDate.setDate(endDate.getDate() + endOffset);
+                var startDate = new Date();
+                startDate.setDate(startDate.getDate() + startOffset);
+
+                var startDateStr = startDate.getFullYear() + '-' +
+                    String(startDate.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(startDate.getDate()).padStart(2, '0');
+                var endDateStr = endDate.getFullYear() + '-' +
+                    String(endDate.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(endDate.getDate()).padStart(2, '0');
+
+                // 使用带日期范围的API
+                var apiUrl = this.API_BASE + '/api/focus/summary?days=7';
+                if (this._chartWeekOffset !== 0) {
+                    apiUrl = this.API_BASE + '/api/focus/summary?start=' + startDateStr + '&end=' + endDateStr;
+                }
+
+                AuthManager.fetchWithAuth(apiUrl)
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         // 销毁旧图表（即使没数据也要销毁）
@@ -6816,12 +6946,12 @@
                             self._barChart = null;
                         }
 
-                        // 构建近7天日期标签（即使没数据也要显示）
+                        // 构建日期标签和数据（根据当前周次偏移）
                         var dayLabels = [];
                         var dayData = [];
                         for (var i = 6; i >= 0; i--) {
                             var d = new Date();
-                            d.setDate(d.getDate() - i);
+                            d.setDate(d.getDate() + endOffset - i);
                             var shortLabel = (d.getMonth() + 1) + '/' + d.getDate();
                             dayLabels.push(shortLabel);
                             dayData.push(0); // 默认0，后面再填充实际数据
@@ -6840,7 +6970,7 @@
                             // 填充实际数据
                             for (var j = 0; j < 7; j++) {
                                 var d = new Date();
-                                d.setDate(d.getDate() - (6 - j));
+                                d.setDate(d.getDate() + endOffset - (6 - j));
                                 var year = d.getFullYear();
                                 var month = String(d.getMonth() + 1).padStart(2, '0');
                                 var day = String(d.getDate()).padStart(2, '0');
@@ -6857,11 +6987,13 @@
                             }
                         }
 
-                        // 渲染累计成就（以小时为单位）
-                        var hours = (totalSeconds / 3600).toFixed(1);
-                        if (hours.endsWith('.0')) hours = hours.slice(0, -2);
-                        document.getElementById('focusTotalTime').textContent = hours + '小时';
-                        document.getElementById('focusTotalSessions').textContent = totalSessions;
+                        // 只有本周才更新累计成就显示
+                        if (self._chartWeekOffset === 0) {
+                            var hours = (totalSeconds / 3600).toFixed(1);
+                            if (hours.endsWith('.0')) hours = hours.slice(0, -2);
+                            document.getElementById('focusTotalTime').textContent = hours + '小时';
+                            document.getElementById('focusTotalSessions').textContent = totalSessions;
+                        }
 
                         var isDark = !document.documentElement.classList.contains('light');
                         var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';

@@ -21,6 +21,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -173,27 +174,70 @@ func GetTodayFocus(w http.ResponseWriter, r *http.Request) {
 // GetFocusSummary 获取历史专注时间总览
 // Query 参数：
 //   - days: 查询最近多少天的统计（默认30天）
+//   - start: 开始日期（YYYY-MM-DD），与end配合使用
+//   - end: 结束日期（YYYY-MM-DD），与start配合使用
+// 注意：如果提供了start和end，则days参数被忽略
 func GetFocusSummary(w http.ResponseWriter, r *http.Request) {
 	database := db.GetDB()
 
-	// 历史总计
+	// 解析日期范围参数
+	startDate := r.URL.Query().Get("start")
+	endDate := r.URL.Query().Get("end")
+	useDateRange := startDate != "" && endDate != ""
+
+	// 历史总计（如果是日期范围，则只统计该范围内的总计）
 	var totalSeconds int64
 	var totalSessions int64
-	database.Model(&model.StudySession{}).Where("user_id = ?", getUserID(r)).
-		Select("COALESCE(SUM(duration), 0)").Scan(&totalSeconds)
-	database.Model(&model.StudySession{}).Where("user_id = ?", getUserID(r)).
-		Count(&totalSessions)
+	
+	if useDateRange {
+		// 验证日期格式
+		if _, err := time.Parse("2006-01-02", startDate); err != nil {
+			sendJSON(w, http.StatusBadRequest, model.ErrorResponse(400, "开始日期格式错误，请使用YYYY-MM-DD格式"))
+			return
+		}
+		if _, err := time.Parse("2006-01-02", endDate); err != nil {
+			sendJSON(w, http.StatusBadRequest, model.ErrorResponse(400, "结束日期格式错误，请使用YYYY-MM-DD格式"))
+			return
+		}
+		
+		// 查询指定日期范围内的总计
+		database.Model(&model.StudySession{}).
+			Where("user_id = ? AND date >= ? AND date <= ?", getUserID(r), startDate, endDate).
+			Select("COALESCE(SUM(duration), 0)").Scan(&totalSeconds)
+		database.Model(&model.StudySession{}).
+			Where("user_id = ? AND date >= ? AND date <= ?", getUserID(r), startDate, endDate).
+			Count(&totalSessions)
+	} else {
+		// 查询历史全部总计
+		database.Model(&model.StudySession{}).Where("user_id = ?", getUserID(r)).
+			Select("COALESCE(SUM(duration), 0)").Scan(&totalSeconds)
+		database.Model(&model.StudySession{}).Where("user_id = ?", getUserID(r)).
+			Count(&totalSessions)
+	}
 
 	// 每日统计
-	days := parseIntQueryParam(r, "days", 30)
 	var dailyStats []model.DailyStatItem
+	var rows *sql.Rows
+	var err error
 
-	rows, err := database.Model(&model.StudySession{}).
-		Select("date, SUM(duration) as total_seconds, COUNT(*) as session_count").
-		Where("user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)", getUserID(r), days).
-		Group("date").
-		Order("date DESC").
-		Rows()
+	if useDateRange {
+		// 使用指定日期范围查询
+		rows, err = database.Model(&model.StudySession{}).
+			Select("date, SUM(duration) as total_seconds, COUNT(*) as session_count").
+			Where("user_id = ? AND date >= ? AND date <= ?", getUserID(r), startDate, endDate).
+			Group("date").
+			Order("date ASC"). // 日期范围查询时按升序排列，便于前端展示时间线
+			Rows()
+	} else {
+		// 使用days参数查询最近N天
+		days := parseIntQueryParam(r, "days", 30)
+		rows, err = database.Model(&model.StudySession{}).
+			Select("date, SUM(duration) as total_seconds, COUNT(*) as session_count").
+			Where("user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)", getUserID(r), days).
+			Group("date").
+			Order("date DESC").
+			Rows()
+	}
 
 	if err != nil {
 		sendJSON(w, http.StatusInternalServerError, model.ErrorResponse(500, "查询历史统计失败"))
