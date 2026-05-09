@@ -15,8 +15,8 @@ import (
 	"net/http"
 	"time"
 
-	"server/model"
 	"tinyweb1/middleware"
+	"tinyweb1/model"
 
 	"gorm.io/gorm"
 )
