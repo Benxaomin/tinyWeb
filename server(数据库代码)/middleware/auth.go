@@ -78,6 +78,47 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// OptionalAuthMiddleware 可选认证中间件
+// 用于公开接口，支持游客访问。如果提供了有效的token，会注入用户信息；
+// 如果没有token或token无效，也允许继续访问
+func OptionalAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 1. 从请求头获取 Authorization
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			// 没有token，直接继续执行（游客模式）
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// 2. 提取 Bearer token（格式："Bearer <token>"）
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			// 格式错误，作为游客继续
+			next.ServeHTTP(w, r)
+			return
+		}
+		tokenString := parts[1]
+
+		// 3. 验证 token（可选，失败也不阻止）
+		claims, err := utils.ValidateToken(tokenString)
+		if err != nil {
+			// token无效或过期，作为游客继续
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// 4. 验证成功，将用户信息注入 context
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, UserIDKey, claims.UserID)
+		ctx = context.WithValue(ctx, UsernameKey, claims.Username)
+		ctx = context.WithValue(ctx, RoleKey, claims.Role)
+
+		// 5. 调用下一个处理器（使用新的 context）
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+}
+
 // GetUserID 从 context 中提取用户ID
 func GetUserID(ctx interface{ Value(key any) any }) (uint, bool) {
 	if v := ctx.Value(UserIDKey); v != nil {

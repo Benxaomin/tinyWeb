@@ -91,6 +91,12 @@ func main() {
 	}
 	fmt.Println("✅ pages 表就绪")
 
+	// ---- 游戏排行榜功能：自动创建 flappy_bird_scores 表 ----
+	if err := db.GetDB().AutoMigrate(&model.FlappyBirdScore{}); err != nil {
+		log.Fatal("❌ 游戏排行榜表自动迁移失败:", err)
+	}
+	fmt.Println("✅ flappy_bird_scores 表就绪")
+
 	// ============================================================
 	// 步骤 3: 初始化测试数据库（tinyweb1_test）
 	// ============================================================
@@ -379,6 +385,33 @@ func startServer() {
 
 	// ---- HTML 页面管理接口（仅管理员可访问）----
 	database := db.GetDB()
+
+	// ---- 游戏排行榜接口 ----
+	gameHandler := handler.NewGameHandler(database)
+	// 保存得分：需要登录
+	mux.HandleFunc("/api/game/flappy-bird/score", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			handler.SaveScoreHandler(gameHandler, w, r)
+		} else {
+			sendMethodNotAllowed(w)
+		}
+	}))
+	// 获取排行榜：公开接口，无需登录（但登录用户可以看到自己的记录）
+	mux.HandleFunc("/api/game/flappy-bird/leaderboard", middleware.OptionalAuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			handler.GetLeaderboardHandler(gameHandler, w, r)
+		} else {
+			sendMethodNotAllowed(w)
+		}
+	}))
+	// 个人得分记录：需要登录
+	mux.HandleFunc("/api/game/flappy-bird/my-scores", middleware.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			handler.GetMyScoresHandler(gameHandler, w, r)
+		} else {
+			sendMethodNotAllowed(w)
+		}
+	}))
 	mux.HandleFunc("/api/admin/pages", middleware.AuthMiddleware(middleware.AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
