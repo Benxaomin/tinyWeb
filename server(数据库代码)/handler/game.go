@@ -199,10 +199,3 @@ func GetMyScoresHandler(h *GameHandler, w http.ResponseWriter, r *http.Request) 
 		TotalTime:  totalTime,
 	}))
 }
-
-// sendJSON 发送JSON响应
-func sendJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
