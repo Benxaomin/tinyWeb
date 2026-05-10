@@ -1,55 +1,48 @@
 #!/bin/bash
 
-# 服务器部署脚本
-# 用法: 
-#   ./deploy.sh              # 默认拉取当前分支
-#   ./deploy.sh main         # 拉取 main 分支
-#   ./deploy.sh feature/xxx  # 拉取指定分支
+# TinyWeb1 高效部署脚本
+# 用法: ./deploy.sh [分支名]
+# 示例: ./deploy.sh feature/html-pages
 
-# 获取分支名，默认为当前分支
-BRANCH=${1:-$(git branch --show-current 2>/dev/null || echo "main")}
+set -e
+
+BRANCH=${1:-$(git rev-parse --abbrev-ref HEAD)}
+PROJECT_DIR=~/tinyWeb1
+SERVER_DIR="$PROJECT_DIR/server(数据库代码)"
+PORT=8080
 
 echo "========================================"
-echo "  🚀 TinyWeb1 服务器部署脚本"
+echo "  🚀 TinyWeb1 快速部署"
 echo "========================================"
-echo "  目标分支: $BRANCH"
-echo ""
+echo "分支: $BRANCH"
 
-# 1. 进入项目目录
-cd ~/tinyweb1 || exit 1
+# 1. Git操作
+cd "$PROJECT_DIR"
+git fetch origin "$BRANCH"
+git reset --hard "origin/$BRANCH"
 
-# 2. 拉取最新代码
-echo "📥 拉取最新代码..."
-git pull origin "$BRANCH"
+# 2. 强制释放端口（关键）
+fuser -k $PORT/tcp 2>/dev/null || true
 
-# 3. 停止旧服务
-echo "🛑 停止旧服务..."
-pkill -f "server.exe" 2>/dev/null || echo "   没有运行中的服务"
-
-# 4. 编译
-echo "🔨 编译服务端..."
-cd "server(数据库代码)" || exit 1
+# 3. 编译
+cd "$SERVER_DIR"
 go build -o server.exe main.go
 
-# 5. 设置环境变量
-echo "⚙️  设置环境变量..."
-export STATIC_DIR=/home/user/tinyweb1/fronted
+# 4. 启动（关键：Bash环境传递环境变量）
+export STATIC_DIR="$PROJECT_DIR/fronted"
+nohup bash -c "./server.exe" > server.log 2>&1 &
 
-# 6. 启动服务
-echo "🚀 启动服务..."
-nohup ./server.exe > server.log 2>&1 &
-
-# 7. 等待服务启动
+# 5. 健康检查
 sleep 2
-
-# 8. 检查状态
-echo "========================================"
-echo "  ✅ 部署完成！"
-echo "========================================"
-echo "服务状态:"
-ps aux | grep server.exe | grep -v grep
-
-echo ""
-echo "日志文件: server(数据库代码)/server.log"
-echo "访问地址: http://1.15.224.88:8080"
-echo ""
+if curl -s http://localhost:$PORT/api/health > /dev/null; then
+    echo "========================================"
+    echo "  ✅ 部署成功"
+    echo "========================================"
+    echo "服务正在运行 (PID: $(pgrep -f server.exe))"
+    echo "访问: http://1.15.224.88:$PORT"
+    echo ""
+else
+    echo "❌ 服务启动失败，查看日志:"
+    tail -20 server.log
+    exit 1
+fi
