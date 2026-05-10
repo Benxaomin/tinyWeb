@@ -1,18 +1,26 @@
 #!/bin/bash
 
 # 服务器部署脚本
-# 用法: 在服务器上执行 ./deploy.sh
+# 用法: 
+#   ./deploy.sh              # 默认拉取当前分支
+#   ./deploy.sh main         # 拉取 main 分支
+#   ./deploy.sh feature/xxx  # 拉取指定分支
+
+# 获取分支名，默认为当前分支
+BRANCH=${1:-$(git branch --show-current 2>/dev/null || echo "main")}
 
 echo "========================================"
 echo "  🚀 TinyWeb1 服务器部署脚本"
 echo "========================================"
+echo "  目标分支: $BRANCH"
+echo ""
 
 # 1. 进入项目目录
 cd ~/tinyweb1 || exit 1
 
 # 2. 拉取最新代码
 echo "📥 拉取最新代码..."
-git pull origin feature/html-pages
+git pull origin "$BRANCH"
 
 # 3. 停止旧服务
 echo "🛑 停止旧服务..."
