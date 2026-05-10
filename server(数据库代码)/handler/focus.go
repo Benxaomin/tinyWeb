@@ -372,3 +372,34 @@ func GetTags(w http.ResponseWriter, r *http.Request) {
 
 	sendJSON(w, http.StatusOK, model.SuccessResponse(tags))
 }
+
+// ============================================================
+// GET /api/focus/earliest - 获取最早专注记录日期
+// ============================================================
+
+// GetEarliestFocusDate 获取当前用户最早的一条专注记录日期
+// 用于前端确定可以查看的历史时间范围上限
+func GetEarliestFocusDate(w http.ResponseWriter, r *http.Request) {
+	database := db.GetDB()
+	userID := getUserID(r)
+
+	// 查询最早的专注记录日期
+	var earliestDate string
+	err := database.Model(&model.StudySession{}).
+		Where("user_id = ?", userID).
+		Select("MIN(date)").
+		Row().
+		Scan(&earliestDate)
+
+	if err != nil {
+		// 没有记录时返回空字符串，前端会处理为不限制
+		sendJSON(w, http.StatusOK, model.SuccessResponse(map[string]string{
+			"earliest_date": "",
+		}))
+		return
+	}
+
+	sendJSON(w, http.StatusOK, model.SuccessResponse(map[string]string{
+		"earliest_date": earliestDate,
+	}))
+}

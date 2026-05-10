@@ -4124,7 +4124,7 @@
                 <canvas id="focusBarChart" width="320" height="160"></canvas>
             </div>
             <div class="focus-chart-hint" style="font-size:0.65rem;color:var(--text-dim);text-align:center;margin-top:6px;">
-                按 <kbd style="font-family:monospace;background:var(--social-bg);padding:1px 4px;border-radius:3px;">←</kbd> <kbd style="font-family:monospace;background:var(--social-bg);padding:1px 4px;border-radius:3px;">→</kbd> 方向键切换周次（最多查看一个月）
+                按 <kbd style="font-family:monospace;background:var(--social-bg);padding:1px 4px;border-radius:3px;">←</kbd> <kbd style="font-family:monospace;background:var(--social-bg);padding:1px 4px;border-radius:3px;">→</kbd> 方向键切换周次（查看所有历史记录）
             </div>
         </div>
 
@@ -6633,8 +6633,10 @@
             _doughnutChart: null,
             _barChart: null,
 
-            // 条形图周次偏移（0=本周, -7=上周, -14=上上周）
+            // 条形图周次偏移（0=本周, -7=上周, 负数表示更早的周）
             _chartWeekOffset: 0,
+            // 最早有记录的日期（从后端获取）
+            _earliestDate: null,
 
             // ---- 切换报告面板 ----
             toggleReport: function() {
@@ -6687,6 +6689,9 @@
                 this._chartWeekOffset = 0;
                 this._updateChartNavUI();
 
+                // 加载最早日期（用于限制导航范围）
+                this._loadEarliestDate();
+
                 // 加载数据并绘图
                 this.loadTodayStats();
                 this.drawDoughnut();
@@ -6730,12 +6735,10 @@
 
             // ---- 切换到上一个周 ----
             _prevChartWeek: function() {
-                // 最多向左切换2次（共3周：本周、上周、上上周）
-                if (this._chartWeekOffset > -14) {
-                    this._chartWeekOffset -= 7;
-                    this._updateChartNavUI();
-                    this.drawBarChart();
-                }
+                // 可以无限向左切换，直到最早有记录的日期
+                this._chartWeekOffset -= 7;
+                this._updateChartNavUI();
+                this.drawBarChart();
             },
 
             // ---- 切换到下一个周 ----
@@ -6754,30 +6757,56 @@
                 var navText = document.getElementById('focusChartNavText');
                 var titleEl = document.getElementById('focusBarChartTitle');
 
+                // 检查是否到达最早记录（只有当earliestDate加载完成后才检查）
+                var reachedEarliest = false;
+                if (this._earliestDate && this._chartWeekOffset < 0) {
+                    // 计算当前视图的开始日期
+                    var currentStart = new Date();
+                    currentStart.setDate(currentStart.getDate() + this._chartWeekOffset - 6);
+                    // 将时间设为0点，以便准确比较
+                    currentStart.setHours(0, 0, 0, 0);
+                    var earliest = new Date(this._earliestDate);
+                    earliest.setHours(0, 0, 0, 0);
+                    // 如果当前视图开始日期 <= 最早记录日期，则禁用上一周按钮
+                    reachedEarliest = currentStart <= earliest;
+                }
+
                 // 更新按钮状态
-                prevBtn.disabled = this._chartWeekOffset <= -14;
+                prevBtn.disabled = reachedEarliest;
                 nextBtn.disabled = this._chartWeekOffset >= 0;
 
                 // 更新样式
-                prevBtn.style.opacity = prevBtn.disabled ? '0.4' : '1';
+                prevBtn.style.opacity = prevBtn.disabled ? '0.3' : '1';
                 prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
-                nextBtn.style.opacity = nextBtn.disabled ? '0.4' : '1';
+                nextBtn.style.opacity = nextBtn.disabled ? '0.3' : '1';
                 nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
 
-                // 更新文本
-                var weekNames = {
-                    0: '本周',
-                    '-7': '上周',
-                    '-14': '上上周'
-                };
-                navText.textContent = weekNames[this._chartWeekOffset] || '本周';
-
-                // 更新标题
+                // 计算周次显示文本
+                var weeksAgo = Math.abs(this._chartWeekOffset) / 7;
                 if (this._chartWeekOffset === 0) {
+                    navText.textContent = '本周';
                     titleEl.textContent = '近7天趋势';
                 } else {
-                    titleEl.textContent = weekNames[this._chartWeekOffset] + '详情';
+                    navText.textContent = weeksAgo + '周前';
+                    titleEl.textContent = weeksAgo + '周前详情';
                 }
+            },
+
+            // ---- 加载最早专注记录日期 ----
+            _loadEarliestDate: function() {
+                var self = this;
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/earliest')
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res.code === 0 && res.data && res.data.earliest_date) {
+                            self._earliestDate = res.data.earliest_date;
+                            // 重新更新UI以反映最早日期限制
+                            self._updateChartNavUI();
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('[FocusTimer] 加载最早日期失败:', err);
+                    });
             },
 
             // ---- 隐藏报告泡泡面板 ----
