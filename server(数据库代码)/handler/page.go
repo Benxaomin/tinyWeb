@@ -14,11 +14,11 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -27,7 +27,6 @@ import (
 	"tinyweb1/middleware"
 	"tinyweb1/model"
 
-	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
@@ -113,13 +112,13 @@ func CreatePage(database *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// 生成文件名：时间戳_随机数.html
-		timestamp := time.Now().Unix()
-		filename := fmt.Sprintf("%d_%s.html", timestamp, slug)
-		filepath := filepath.Join(UploadDir, filename)
+	// 生成文件名：时间戳_随机数.html
+	timestamp := time.Now().Unix()
+	filename := fmt.Sprintf("%d_%s.html", timestamp, slug)
+	filePath := path.Join(UploadDir, filename) // 使用 path.Join 保证正斜杠
 
-		// 保存文件
-		out, err := os.Create(filepath)
+	// 保存文件
+	out, err := os.Create(filePath)
 		if err != nil {
 			sendJSON(w, http.StatusInternalServerError, model.APIResponse{
 				Code:    500,
@@ -130,19 +129,19 @@ func CreatePage(database *gorm.DB) http.HandlerFunc {
 		defer out.Close()
 
 		size, err := io.Copy(out, file)
-		if err != nil {
-			os.Remove(filepath)
-			sendJSON(w, http.StatusInternalServerError, model.APIResponse{
-				Code:    500,
-				Message: "写入文件失败",
-			})
-			return
-		}
+	if err != nil {
+		os.Remove(filePath)
+		sendJSON(w, http.StatusInternalServerError, model.APIResponse{
+			Code:    500,
+			Message: "写入文件失败",
+		})
+		return
+	}
 
 		// 获取上传者用户名
 		username, _ := middleware.GetUsername(r.Context())
 
-		// 保存到数据库
+	// 保存到数据库
 		page := model.Page{
 			Title:    title,
 			Slug:     slug,
@@ -152,7 +151,7 @@ func CreatePage(database *gorm.DB) http.HandlerFunc {
 		}
 
 		if err := database.Create(&page).Error; err != nil {
-			os.Remove(filepath)
+			os.Remove(filePath)
 			sendJSON(w, http.StatusInternalServerError, model.APIResponse{
 				Code:    500,
 				Message: "保存记录失败",
@@ -199,9 +198,18 @@ func GetPages(database *gorm.DB) http.HandlerFunc {
 // DELETE /api/admin/pages/:id
 func DeletePage(database *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		idStr := vars["id"]
-		id, err := strconv.ParseUint(idStr, 10, 32)
+		// 手动解析路径 /api/admin/pages/:id
+		pathStr := strings.TrimPrefix(r.URL.Path, "/api/admin/pages/")
+		pathStr = strings.TrimSpace(pathStr)
+		if pathStr == "" {
+			sendJSON(w, http.StatusBadRequest, model.APIResponse{
+				Code:    400,
+				Message: "无效的文件ID",
+			})
+			return
+		}
+		
+		id, err := strconv.ParseUint(pathStr, 10, 32)
 		if err != nil {
 			sendJSON(w, http.StatusBadRequest, model.APIResponse{
 				Code:    400,
@@ -227,9 +235,9 @@ func DeletePage(database *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// 删除文件
-		filepath := filepath.Join(UploadDir, page.FileName)
-		os.Remove(filepath) // 忽略错误，文件可能不存在
+	// 删除文件
+		filePath := path.Join(UploadDir, page.FileName)
+		os.Remove(filePath) // 忽略错误，文件可能不存在
 
 		// 删除数据库记录
 		if err := database.Delete(&page).Error; err != nil {
@@ -251,8 +259,14 @@ func DeletePage(database *gorm.DB) http.HandlerFunc {
 // GET /pages/:slug
 func ServePage(database *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		slug := vars["slug"]
+		// 手动解析路径 /pages/:slug
+		pathStr := strings.TrimPrefix(r.URL.Path, "/pages/")
+		pathStr = strings.TrimSpace(pathStr)
+		if pathStr == "" {
+			http.NotFound(w, r)
+			return
+		}
+		slug := pathStr
 
 		// 查询页面
 		var page model.Page
@@ -265,9 +279,9 @@ func ServePage(database *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// 读取并返回文件
-		filepath := filepath.Join(UploadDir, page.FileName)
-		http.ServeFile(w, r, filepath)
+	// 读取并返回文件
+		filePath := filepath.Join(UploadDir, page.FileName)
+		http.ServeFile(w, r, filePath)
 	}
 }
 

@@ -2,7 +2,6 @@
 (function() {
     // 游戏配置
     var CANVAS_WIDTH = 400;
-
     var CANVAS_HEIGHT = 600;
     var GRAVITY = 0.06;
     var JUMP_STRENGTH = -2.4;
@@ -28,6 +27,171 @@
     var isPlaying = false;
     var isPaused = false;
     var animationId = null;
+    var gameStartTime = null;  // 游戏开始时间
+    var pipesPassed = 0;       // 通过的管道数量
+    
+    // ==================== 音效系统 ====================
+    var audioCtx = null;
+    var bgmOscillators = [];
+    var isMuted = false;
+    
+    // 初始化音频上下文（用户交互后调用）
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+    
+    // 跳跃音效 - 清脆的上升音
+    function playJumpSound() {
+        if (!audioCtx || isMuted) return;
+        try {
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            // 使用方波产生清脆感
+            osc.type = 'triangle';
+            // 快速上升的音调
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+            
+            // 快速衰减
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.15);
+        } catch(e) {}
+    }
+    
+    // 得分音效 - 愉悦的上升旋律
+    function playScoreSound() {
+        if (!audioCtx || isMuted) return;
+        try {
+            // 创建一个和弦效果
+            var frequencies = [523.25, 659.25, 783.99]; // C大调和弦 C-E-G
+            frequencies.forEach(function(freq, i) {
+                var osc = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                // 轻微的延迟产生琶音效果
+                var delay = i * 0.03;
+                gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+                gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + delay + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.3);
+                
+                osc.start(audioCtx.currentTime + delay);
+                osc.stop(audioCtx.currentTime + delay + 0.3);
+            });
+        } catch(e) {}
+    }
+    
+    // 游戏结束音效 - 低沉的下降音
+    function playGameOverSound() {
+        if (!audioCtx || isMuted) return;
+        try {
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sawtooth';
+            // 下降的悲伤音调
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+            
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch(e) {}
+    }
+    
+    // 背景音乐 - 轻快的循环旋律
+    function startBGM() {
+        if (!audioCtx || isMuted) return;
+        stopBGM(); // 先停止之前的背景音乐
+        
+        try {
+            // 创建一个轻快的八度音程循环
+            var baseFreq = 261.63; // C4
+            var melody = [0, 4, 7, 4, 0, 4, 7, 12]; // 简单旋律：C-E-G-E-C-E-G-C(octave)
+            var noteIndex = 0;
+            
+            // 使用持续的低音作为背景
+            var bassOsc = audioCtx.createOscillator();
+            var bassGain = audioCtx.createGain();
+            bassOsc.connect(bassGain);
+            bassGain.connect(audioCtx.destination);
+            bassOsc.type = 'sine';
+            bassOsc.frequency.value = baseFreq / 2; // 低音 C
+            bassGain.gain.value = 0.05;
+            bassOsc.start();
+            bgmOscillators.push(bassOsc);
+            
+            // 创建旋律循环
+            function playMelodyNote() {
+                if (!isPlaying || isPaused || !audioCtx) return;
+                
+                var note = melody[noteIndex % melody.length];
+                var freq = baseFreq * Math.pow(2, note / 12);
+                
+                var osc = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.3);
+                bgmOscillators.push(osc);
+                
+                noteIndex++;
+                // 每0.4秒一个音符
+                setTimeout(playMelodyNote, 400);
+            }
+            
+            // 延迟一点开始，避免和游戏开始音效冲突
+            setTimeout(playMelodyNote, 200);
+            
+        } catch(e) {}
+    }
+    
+    // 停止背景音乐
+    function stopBGM() {
+        bgmOscillators.forEach(function(osc) {
+            try {
+                osc.stop();
+            } catch(e) {}
+        });
+        bgmOscillators = [];
+    }
+    
+    // 静音/取消静音切换
+    function toggleMute() {
+        isMuted = !isMuted;
+        if (isMuted) {
+            stopBGM();
+        } else if (isPlaying && !isPaused) {
+            startBGM();
+        }
+        return isMuted;
+    }
     
     // 配色方案（根据主题自动适应）
     function getColors() {
@@ -252,6 +416,7 @@
                 pipe.passed = true;
                 score++;
                 gameScore.textContent = score;
+                playScoreSound(); // 播放得分音效
             }
             
             // 碰撞检测
@@ -297,18 +462,28 @@
         }
         if (isPaused) return;
         bird.velocity = JUMP_STRENGTH;
+        playJumpSound(); // 播放跳跃音效
     }
     
     // 开始游戏
     function startGame() {
+        // 初始化音频系统（需要用户交互后才能播放）
+        initAudio();
+        
         // 先取消之前的动画帧，防止多个循环同时运行
         cancelAnimationFrame(animationId);
         isPlaying = true;
         isPaused = false;
+        gameStartTime = Date.now();  // 记录游戏开始时间
         startHint.classList.add('hide');
         gameOverScreen.classList.remove('show');
+        // 恢复画布交互
+        canvas.style.pointerEvents = 'auto';
         resetGame();
         gameLoop();
+        
+        // 开始背景音乐
+        startBGM();
     }
     
     // 重置游戏
@@ -319,21 +494,101 @@
         bird.wingAngle = 0;
         pipes = [];
         score = 0;
+        pipesPassed = 0;
         frameCount = 0;
         gameScore.textContent = '0';
+    }
+    
+    // 格式化游戏时长为 mm:ss
+    function formatGameTime(ms) {
+        var seconds = Math.floor(ms / 1000);
+        var mins = Math.floor(seconds / 60);
+        var secs = seconds % 60;
+        return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+    
+    // 历史最高分
+    var highScore = 0;
+    
+    // 从本地存储加载最高分
+    function loadHighScore() {
+        var saved = localStorage.getItem('flappyHighScore');
+        if (saved) {
+            highScore = parseInt(saved, 10);
+        }
+    }
+    
+    // 保存最高分
+    function saveHighScore() {
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('flappyHighScore', highScore);
+        }
     }
     
     // 游戏结束
     function gameOver() {
         isPlaying = false;
         cancelAnimationFrame(animationId);
+        
+        // 停止背景音乐，播放游戏结束音效
+        stopBGM();
+        playGameOverSound();
+        
+        // 更新并保存最高分
+        saveHighScore();
+        
+        // 显示结果展示页
+        showResultScreen();
+    }
+    
+    // 显示结果展示页
+    function showResultScreen() {
+        // 计算游戏时长
+        var gameDuration = gameStartTime ? Date.now() - gameStartTime : 0;
+        
         finalScore.textContent = score;
+        
+        // 更新最高分显示
+        var highScoreEl = document.getElementById('highScore');
+        var newRecordEl = document.getElementById('newRecord');
+        var pipesPassedEl = document.getElementById('pipesPassed');
+        var gameTimeEl = document.getElementById('gameTime');
+        
+        if (highScoreEl) {
+            highScoreEl.textContent = highScore;
+        }
+        
+        // 显示通过的管道数（得分就是通过的管道数）
+        if (pipesPassedEl) {
+            pipesPassedEl.textContent = score;
+        }
+        
+        // 显示游戏时长
+        if (gameTimeEl) {
+            gameTimeEl.textContent = formatGameTime(gameDuration);
+        }
+        
+        // 显示"新纪录"标记（如果破纪录了）
+        if (newRecordEl) {
+            if (score > 0 && score > highScore) {
+                newRecordEl.style.display = 'inline-block';
+            } else {
+                newRecordEl.style.display = 'none';
+            }
+        }
+        
+        // 禁用游戏画布交互，防止空格键误触
+        canvas.style.pointerEvents = 'none';
+        
         gameOverScreen.classList.add('show');
     }
     
     // 重新开始
     function restart() {
         gameOverScreen.classList.remove('show');
+        // 恢复画布交互
+        canvas.style.pointerEvents = 'auto';
         startGame();
     }
     
@@ -356,6 +611,7 @@
         isPlaying = false;
         isPaused = false;
         cancelAnimationFrame(animationId);
+        stopBGM(); // 停止背景音乐
         startHint.classList.remove('hide');
         gameOverScreen.classList.remove('show');
     }
@@ -368,6 +624,22 @@
     
     document.getElementById('gameCloseBtn').addEventListener('click', closeGame);
     document.getElementById('gameRestartBtn').addEventListener('click', restart);
+    
+    // 关闭结果页按钮 - 只关闭结果展示，回到准备状态
+    var closeResultBtn = document.getElementById('gameCloseResultBtn');
+    if (closeResultBtn) {
+        closeResultBtn.addEventListener('click', function() {
+            gameOverScreen.classList.remove('show');
+            // 恢复画布交互
+            canvas.style.pointerEvents = 'auto';
+            // 重置到准备状态（显示开始提示）
+            isPlaying = false;
+            isPaused = false;
+            resetGame();
+            draw();
+            startHint.classList.remove('hide');
+        });
+    }
     
     // 画布点击/触摸 - 使用mousedown响应更快
     canvas.addEventListener('mousedown', function(e) {
