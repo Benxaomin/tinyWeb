@@ -28,8 +28,13 @@ fuser -k $PORT/tcp 2>/dev/null || true
 cd "$SERVER_DIR"
 go build -o server.exe main.go
 
-# 4. 启动（关键：Bash环境传递环境变量）
+# 4. 设置环境变量并启动
 export STATIC_DIR="$PROJECT_DIR/fronted"
+export DB_HOST=localhost
+export DB_PORT=3306
+export DB_USER=root
+export DB_PASS=renhan007619
+export DB_NAME=tinyweb1
 nohup bash -c "./server.exe" > server.log 2>&1 &
 
 # 5. 健康检查
