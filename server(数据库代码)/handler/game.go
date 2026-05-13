@@ -83,7 +83,7 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 		isLoggedIn = true
 	}
 
-	// 1. 获取全服Top10 - 每个用户只显示最好成绩
+	// 1. 获取全服Top10 - 每个用户只显示最好成绩（取最早达成的最高分记录）
 	var globalTop10 []model.ScoreItem
 	err := h.DB.Raw(`
 		SELECT 
@@ -92,14 +92,20 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 			fbs.game_time,
 			fbs.played_at,
 			0 as ` + "`rank`" + `
-		FROM flappy_bird_scores fbs
+		FROM (
+			SELECT user_id, MAX(score) as max_score
+			FROM flappy_bird_scores
+			GROUP BY user_id
+		) best
+		JOIN flappy_bird_scores fbs 
+			ON best.user_id = fbs.user_id 
+			AND best.max_score = fbs.score
 		JOIN users u ON fbs.user_id = u.id
-		WHERE fbs.score = (
-			SELECT MAX(score) 
-			FROM flappy_bird_scores 
-			WHERE user_id = fbs.user_id
+		WHERE fbs.played_at = (
+			SELECT MIN(played_at)
+			FROM flappy_bird_scores
+			WHERE user_id = fbs.user_id AND score = fbs.score
 		)
-		GROUP BY fbs.user_id, u.username, fbs.score, fbs.game_time, fbs.played_at
 		ORDER BY fbs.score DESC, fbs.played_at ASC
 		LIMIT 10
 	`).Scan(&globalTop10).Error
@@ -116,6 +122,7 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 	// 2. 获取个人Top5（仅登录用户）
 	var myTop5 []model.ScoreItem
 	if isLoggedIn {
+		// 先获取用户所有记录，按分数降序
 		err = h.DB.Raw(`
 			SELECT 
 				u.username,
@@ -126,7 +133,7 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 			FROM flappy_bird_scores fbs
 			JOIN users u ON fbs.user_id = u.id
 			WHERE fbs.user_id = ?
-			ORDER BY fbs.score DESC, fbs.played_at ASC
+			ORDER BY fbs.score DESC, fbs.played_at DESC
 			LIMIT 5
 		`, uid).Scan(&myTop5).Error
 
