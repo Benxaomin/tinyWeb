@@ -6,7 +6,7 @@
 
 set -e
 
-BRANCH=${1:-$(git rev-parse --abbrev-ref HEAD)}
+BRANCH=${1:-feature/html-pages}
 PROJECT_DIR=~/tinyWeb1
 SERVER_DIR="$PROJECT_DIR/server(数据库代码)"
 PORT=8080
@@ -18,7 +18,7 @@ echo "分支: $BRANCH"
 
 # 1. Git操作
 cd "$PROJECT_DIR"
-git fetch origin "$BRANCH"
+git fetch origin
 git reset --hard "origin/$BRANCH"
 
 # 2. 强制释放端口（关键）
