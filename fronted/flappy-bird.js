@@ -2,10 +2,10 @@
     // 游戏配置
     var CANVAS_WIDTH = 400;
     var CANVAS_HEIGHT = 600;
-    var GRAVITY = 0.25;
-    var JUMP_STRENGTH = -4.5;
-    var PIPE_SPEED = 2;
-    var PIPE_SPAWN_RATE = 100;
+    var GRAVITY = 0.06;
+    var JUMP_STRENGTH = -2.4;
+    var PIPE_SPEED = 1.2;
+    var PIPE_SPAWN_RATE = 180;
     var PIPE_GAP = 140;
     var PIPE_WIDTH = 60;
     
