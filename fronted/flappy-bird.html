@@ -735,10 +735,19 @@
         let currentScore = 0;
 
         // 获取token - 支持多种存储方式
+        // 注意：主站使用 'tinyweb_token' 作为 key
         function getToken() {
-            // 尝试从 localStorage 获取
-            let token = localStorage.getItem('token');
+            // 优先尝试主站使用的 key
+            let token = localStorage.getItem('tinyweb_token');
             if (token) return token;
+            
+            // 兼容旧版 'token' key
+            token = localStorage.getItem('token');
+            if (token) {
+                // 迁移到新的 key
+                localStorage.setItem('tinyweb_token', token);
+                return token;
+            }
             
             // 尝试从 sessionStorage 获取
             token = sessionStorage.getItem('token');
@@ -750,7 +759,7 @@
                 const [name, value] = cookie.trim().split('=');
                 if (name === 'token' && value) {
                     // 保存到 localStorage 以便后续使用
-                    localStorage.setItem('token', value);
+                    localStorage.setItem('tinyweb_token', value);
                     return value;
                 }
             }
