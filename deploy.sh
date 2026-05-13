@@ -41,7 +41,7 @@ if curl -s http://localhost:$PORT/api/health > /dev/null; then
     echo "服务正在运行 (PID: $(pgrep -f server.exe))"
     echo "访问: http://1.15.224.88:$PORT"
     echo ""
-else
+else 
     echo "❌ 服务启动失败，查看日志:"
     tail -20 server.log
     exit 1

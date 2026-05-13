@@ -20,8 +20,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: linear-gradient(135deg, #a2d2ff 0%, #ffc8dd 50%, #cdb4db 100%);
-            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3748 50%, #1a2332 100%);
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
         }
 
         /* ==================== 导航栏 ==================== */
@@ -31,16 +31,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(30, 30, 45, 0.85);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(232, 168, 109, 0.15);
         }
 
         .nav-brand {
             font-family: 'Pacifico', cursive;
             font-size: 24px;
-            color: #ff6b9d;
+            color: #e8a86d;
             text-decoration: none;
+            text-shadow: 0 0 10px rgba(232, 168, 109, 0.3);
         }
 
         .nav-links {
@@ -52,7 +54,7 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            color: #555;
+            color: #c8c0b0;
             text-decoration: none;
             padding: 8px 15px;
             border-radius: 20px;
@@ -60,19 +62,20 @@
         }
 
         .nav-link:hover {
-            background: rgba(255, 107, 157, 0.1);
-            color: #ff6b9d;
+            background: rgba(232, 168, 109, 0.15);
+            color: #e8a86d;
         }
 
         /* ==================== 登录提示条 ==================== */
         .login-banner {
             width: 100%;
             padding: 10px;
-            background: linear-gradient(135deg, #ff6b9d, #feca57);
-            color: white;
+            background: linear-gradient(135deg, #e8a86d, #f0945e);
+            color: #1a1a2e;
             text-align: center;
             font-size: 14px;
             display: none;
+            font-weight: 500;
         }
 
         .login-banner.show {
@@ -110,7 +113,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
             overflow: hidden;
-            border: 4px solid #ff6b9d;
+            border: 4px solid #e8a86d;
         }
 
         #gameCanvas {
@@ -148,7 +151,7 @@
         .status-title {
             font-family: 'Pacifico', cursive;
             font-size: 36px;
-            color: #ff6b9d;
+            color: #e8a86d;
             margin-bottom: 15px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
@@ -164,17 +167,17 @@
             font-size: 20px;
             border: none;
             border-radius: 30px;
-            background: linear-gradient(135deg, #ff6b9d, #feca57);
-            color: white;
+            background: linear-gradient(135deg, #e8a86d, #f0945e);
+            color: #1a1a2e;
             cursor: pointer;
             font-family: 'Pacifico', cursive;
-            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.4);
+            box-shadow: 0 8px 25px rgba(232, 168, 109, 0.4);
             transition: all 0.3s ease;
         }
 
         .start-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(255, 107, 157, 0.5);
+            box-shadow: 0 12px 35px rgba(232, 168, 109, 0.5);
         }
 
         /* 操作说明 */
@@ -195,8 +198,8 @@
             align-items: center;
             justify-content: center;
             padding: 5px 12px;
-            background: #ff6b9d;
-            color: white;
+            background: #e8a86d;
+            color: #1a1a2e;
             border-radius: 8px;
             font-weight: bold;
             font-size: 12px;
@@ -224,7 +227,7 @@
         }
 
         .leaderboard-card.personal {
-            border-color: #ff6b9d;
+            border-color: #e8a86d;
         }
 
         .card-header {
@@ -251,7 +254,7 @@
         }
 
         .card-icon.personal {
-            background: linear-gradient(135deg, #ff6b9d, #feca57);
+            background: linear-gradient(135deg, #e8a86d, #f0945e);
         }
 
         .card-title {
@@ -282,13 +285,13 @@
         }
 
         .leaderboard-item:hover {
-            background: #fff0f3;
+            background: rgba(232, 168, 109, 0.1);
             transform: translateX(5px);
         }
 
         .leaderboard-item.my-score {
-            background: linear-gradient(135deg, #fff0f3, #ffe4e9);
-            border: 2px solid #ff6b9d;
+            background: linear-gradient(135deg, rgba(232, 168, 109, 0.15), rgba(240, 148, 94, 0.1));
+            border: 2px solid #e8a86d;
         }
 
         .rank-badge {
@@ -342,7 +345,7 @@
         .player-score {
             font-family: 'Pacifico', cursive;
             font-size: 20px;
-            color: #ff6b9d;
+            color: #e8a86d;
         }
 
         /* 加载状态 */
@@ -356,7 +359,7 @@
             width: 40px;
             height: 40px;
             border: 4px solid #f0f0f0;
-            border-top-color: #ff6b9d;
+            border-top-color: #e8a86d;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
@@ -383,7 +386,7 @@
         .stat-value {
             font-family: 'Pacifico', cursive;
             font-size: 24px;
-            color: #ff6b9d;
+            color: #e8a86d;
         }
 
         .stat-label {
@@ -422,7 +425,7 @@
         }
 
         .toast.info {
-            background: linear-gradient(135deg, #1890ff, #40a9ff);
+            background: linear-gradient(135deg, #e8a86d, #f0945e);
         }
 
         /* 游戏结束弹窗 */
@@ -464,7 +467,7 @@
         .modal-title {
             font-family: 'Pacifico', cursive;
             font-size: 36px;
-            color: #ff6b9d;
+            color: #e8a86d;
             margin-bottom: 20px;
         }
 
@@ -497,7 +500,7 @@
         }
 
         .no-save-hint a {
-            color: #ff6b9d;
+            color: #e8a86d;
             text-decoration: none;
         }
 
@@ -519,8 +522,8 @@
         }
 
         .modal-btn.primary {
-            background: linear-gradient(135deg, #ff6b9d, #feca57);
-            color: white;
+            background: linear-gradient(135deg, #e8a86d, #f0945e);
+            color: #1a1a2e;
         }
 
         .modal-btn.secondary {
@@ -695,7 +698,7 @@
             <div class="modal-title">游戏结束!</div>
             <div class="final-score" id="finalScore">0</div>
             <div style="color: #666; font-size: 14px;">
-                本次得分: <span id="scoreValue" style="color: #ff6b9d; font-weight: bold;">0</span>
+                本次得分: <span id="scoreValue" style="color: #e8a86d; font-weight: bold;">0</span>
                 <span id="newRecordBadge" class="new-record-badge" style="display: none;">新纪录! 🎉</span>
             </div>
             <div id="scoreSaveHint" class="save-score-hint" style="display: none;">
@@ -715,15 +718,34 @@
     <script>
         // ==================== 排行榜功能 ====================
         
-        const API_BASE = 'http://localhost:8080/api';
+        const API_BASE = '/api';
         let myBestScore = 0;
         let isGameRunning = false;
         let isPaused = false;
         let currentScore = 0;
 
-        // 获取token
+        // 获取token - 支持多种存储方式
         function getToken() {
-            return localStorage.getItem('token');
+            // 尝试从 localStorage 获取
+            let token = localStorage.getItem('token');
+            if (token) return token;
+            
+            // 尝试从 sessionStorage 获取
+            token = sessionStorage.getItem('token');
+            if (token) return token;
+            
+            // 尝试从 Cookie 获取
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'token' && value) {
+                    // 保存到 localStorage 以便后续使用
+                    localStorage.setItem('token', value);
+                    return value;
+                }
+            }
+            
+            return null;
         }
 
         // 检查登录状态
@@ -743,36 +765,64 @@
 
         // 加载排行榜数据 - 不需要登录
         async function loadLeaderboard() {
+            showToast('正在加载排行榜...', 'info');
+            
             try {
                 // 获取全服排行榜（公开接口）
-                const response = await fetch(`${API_BASE}/game/flappy-bird/leaderboard`);
+                const response = await fetch(`${API_BASE}/game/flappy-bird/leaderboard`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    credentials: 'include' // 允许携带 cookie
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.code === 0) {
                     renderLeaderboard(data.data);
+                    showToast('排行榜加载完成', 'success');
                 } else {
-                    showToast(data.message, 'error');
+                    showToast(data.message || '加载失败', 'error');
                 }
             } catch (error) {
                 console.error('加载排行榜失败:', error);
+                showToast('网络连接失败，显示离线模式', 'error');
+                
                 // 显示离线状态
                 document.getElementById('globalLeaderboard').innerHTML = `
-                    <div class="loading-placeholder">
-                        <div style="font-size: 32px; margin-bottom: 10px;">📡</div>
-                        <div>离线模式</div>
+                    <div class="loading-placeholder" style="padding: 30px;">
+                        <div style="font-size: 40px; margin-bottom: 15px;">📡</div>
+                        <div style="color: #999; font-size: 14px;">网络连接失败</div>
+                        <div style="color: #ccc; font-size: 12px; margin-top: 5px;">请检查网络后重试</div>
                     </div>
                 `;
                 document.getElementById('personalLeaderboard').innerHTML = `
-                    <div class="loading-placeholder">
-                        <div>请先登录查看个人记录</div>
-                        <a href="index.html" style="color: #ff6b9d; text-decoration: none;">去登录</a>
+                    <div class="loading-placeholder" style="padding: 20px;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">😢</div>
+                        <div>暂时无法加载排行榜</div>
+                        <a href="#" onclick="location.reload()" style="display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 15px; background: #e8a86d; color: #1a1a2e; text-decoration: none; font-size: 12px;">刷新重试</a>
                     </div>
                 `;
+                
+                document.getElementById('totalPlayers').textContent = '-';
+                document.getElementById('totalGames').textContent = '-';
+                document.getElementById('myBestScore').textContent = isLoggedIn() ? '0' : '-';
             }
         }
 
         // 渲染排行榜
         function renderLeaderboard(data) {
+            if (!data) {
+                console.warn('排行榜数据为空');
+                return;
+            }
+            
             // 更新统计数据
             document.getElementById('totalGames').textContent = formatNumber(data.total_plays || 0);
             
@@ -794,7 +844,12 @@
                 const uniquePlayers = new Set(data.global_top10.map(item => item.username)).size;
                 document.getElementById('totalPlayers').textContent = uniquePlayers;
             } else {
-                globalList.innerHTML = '<div class="loading-placeholder" style="padding: 20px;">暂无数据，快来抢占第一吧！</div>';
+                globalList.innerHTML = `
+                    <div class="loading-placeholder" style="padding: 30px;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">🎮</div>
+                        <div style="color: #666;">暂无数据</div>
+                        <div style="color: #999; font-size: 12px; margin-top: 5px;">快来抢占第一吧！</div>
+                    </div>`;
                 document.getElementById('totalPlayers').textContent = '0';
             }
 
@@ -818,7 +873,12 @@
                     myBestScore = data.my_top5[0].score;
                     personalSubtitle.textContent = '个人 Top 5';
                 } else {
-                    personalList.innerHTML = '<div class="loading-placeholder" style="padding: 20px;">你还没有玩过，快来试试吧！</div>';
+                    personalList.innerHTML = `
+                        <div class="loading-placeholder" style="padding: 30px;">
+                            <div style="font-size: 40px; margin-bottom: 10px;">🎯</div>
+                            <div style="color: #666;">你还没有玩过</div>
+                            <div style="color: #999; font-size: 12px; margin-top: 5px;">快来试试吧！</div>
+                        </div>`;
                     myBestScore = 0;
                     personalSubtitle.textContent = '个人 Top 5';
                 }
@@ -827,9 +887,9 @@
                 // 未登录状态
                 personalList.innerHTML = `
                     <div class="loading-placeholder" style="padding: 20px;">
-                        <div style="font-size: 32px; margin-bottom: 10px;">🔒</div>
-                        <div>登录后查看个人记录</div>
-                        <a href="index.html" style="display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 15px; background: #ff6b9d; color: white; text-decoration: none; font-size: 12px;">去登录</a>
+                        <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
+                        <div style="color: #666; margin-bottom: 15px;">登录后查看个人记录</div>
+                        <a href="index.html" style="display: inline-block; padding: 10px 20px; border-radius: 20px; background: linear-gradient(135deg, #e8a86d, #f0945e); color: #1a1a2e; text-decoration: none; font-size: 14px; font-weight: bold;">去登录</a>
                     </div>
                 `;
                 personalSubtitle.textContent = '请先登录';
@@ -863,8 +923,13 @@
                     body: JSON.stringify({
                         score: score,
                         game_time: gameTime
-                    })
+                    }),
+                    credentials: 'include'
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const data = await response.json();
                 if (data.code === 0) {
@@ -873,6 +938,7 @@
                     loadLeaderboard();
                     return true;
                 }
+                console.warn('保存得分失败:', data.message);
                 return false;
             } catch (error) {
                 console.error('保存得分失败:', error);
@@ -901,20 +967,39 @@
                 const saved = await saveGameScore(score, gameTime);
                 if (saved) {
                     saveHint.style.display = 'inline-block';
+                    saveHint.textContent = '✓ 得分已保存到排行榜';
                     noSaveHint.style.display = 'none';
                 } else {
                     saveHint.style.display = 'none';
                     noSaveHint.style.display = 'inline-block';
-                    noSaveHint.innerHTML = '得分保存失败，请稍后重试';
+                    noSaveHint.innerHTML = '得分保存失败，<a href="#" onclick="retrySaveScore(' + score + ')">点击重试</a>';
                 }
             } else {
                 saveHint.style.display = 'none';
                 noSaveHint.style.display = 'inline-block';
+                noSaveHint.innerHTML = `
+                    登录后可保存得分参与排名<br>
+                    <a href="index.html" style="display: inline-block; margin-top: 8px; padding: 6px 16px; border-radius: 15px; background: #e8a86d; color: #1a1a2e; text-decoration: none;">去登录</a>
+                `;
             }
             
             setTimeout(() => {
                 document.getElementById('gameOverModal').classList.add('show');
             }, 500);
+        }
+
+        // 重试保存分数
+        async function retrySaveScore(score) {
+            showToast('正在重试保存...', 'info');
+            const gameTime = Math.floor(Date.now() / 1000);
+            const saved = await saveGameScore(score, gameTime);
+            if (saved) {
+                showToast('保存成功！', 'success');
+                document.getElementById('scoreSaveHint').style.display = 'inline-block';
+                document.getElementById('noSaveHint').style.display = 'none';
+            } else {
+                showToast('保存失败，请检查网络', 'error');
+            }
         }
 
         // 关闭弹窗
@@ -934,19 +1019,35 @@
         }
 
         // 刷新排行榜
-        function refreshLeaderboard() {
+        async function refreshLeaderboard() {
+            const btn = document.querySelector('.nav-link[onclick="refreshLeaderboard()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">refresh</span> 刷新中...';
+            
             showToast('正在刷新排行榜...', 'info');
-            loadLeaderboard();
+            await loadLeaderboard();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 1000);
         }
 
         // 格式化日期
         function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            return `${date.getMonth() + 1}月${date.getDate()}日`;
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    return '刚刚';
+                }
+                return `${date.getMonth() + 1}月${date.getDate()}日`;
+            } catch (e) {
+                return '刚刚';
+            }
         }
 
         // 格式化数字
         function formatNumber(num) {
+            if (num === undefined || num === null) return '0';
             if (num >= 10000) {
                 return (num / 10000).toFixed(1) + '万';
             }
@@ -955,6 +1056,7 @@
 
         // HTML转义
         function escapeHtml(text) {
+            if (typeof text !== 'string') return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
@@ -962,13 +1064,19 @@
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 显示登录提示条（未登录时）
-            if (!isLoggedIn()) {
+            // 检查登录状态并显示提示
+            if (isLoggedIn()) {
+                console.log('用户已登录，token:', getToken().substring(0, 10) + '...');
+                document.getElementById('loginBanner').classList.remove('show');
+            } else {
+                console.log('用户未登录');
                 document.getElementById('loginBanner').classList.add('show');
             }
             
-            // 加载排行榜（不需要登录）
-            loadLeaderboard();
+            // 延迟加载排行榜，确保页面渲染完成
+            setTimeout(() => {
+                loadLeaderboard();
+            }, 100);
             
             // 初始化游戏
             initGame();
@@ -980,35 +1088,51 @@
         let originalGameOver = null;
 
         function initGame() {
-            // 保存原始的游戏循环引用
-            if (typeof gameLoop !== 'undefined') {
-                originalGameOver = window.gameOver;
-                window.gameOver = function() {
-                    if (originalGameOver) originalGameOver();
-                    const score = parseInt(document.getElementById('scoreDisplay').textContent);
-                    onGameOver(score);
-                };
-            }
+            // 等待 flappy-bird.js 加载完成
+            const checkGameLoaded = () => {
+                if (typeof resetGame === 'function') {
+                    console.log('✓Flappy Bird 游戏脚本已加载');
+                    
+                    // 保存原始的游戏函数
+                    window.originalResetGame = resetGame;
+                    
+                    // 监听游戏结束事件
+                    window.addEventListener('gameOver', function(e) {
+                        console.log('接收到游戏结束事件，得分:', e.detail);
+                        onGameOver(e.detail);
+                    });
+                } else {
+                    // 如果游戏脚本还没加载，等待一下再检查
+                    console.log('等待游戏脚本加载...');
+                    setTimeout(checkGameLoaded, 100);
+                }
+            };
+            
+            checkGameLoaded();
         }
 
         function startGame() {
+            console.log('开始游戏');
             document.getElementById('gameStatus').classList.remove('show');
             isGameRunning = true;
             
             // 调用原始游戏开始函数
-            if (typeof resetGame === 'function') {
+            if (typeof window.originalResetGame === 'function') {
+                window.originalResetGame();
+            } else if (typeof resetGame === 'function') {
                 resetGame();
+            } else {
+                console.error('游戏初始化失败：resetGame 函数未找到');
+                showToast('游戏加载失败，请刷新页面重试', 'error');
             }
         }
 
         function resetGame() {
+            console.log('重置游戏');
             document.getElementById('gameStatus').classList.add('show');
             isGameRunning = false;
             
-            // 调用原始重置函数
-            if (typeof resetGameState === 'function') {
-                resetGameState();
-            }
+            // 游戏会自动重置，不需要额外调用
         }
     </script>
 </body>
