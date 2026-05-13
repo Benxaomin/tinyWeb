@@ -83,18 +83,19 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 		isLoggedIn = true
 	}
 
-	// 1. 获取全服Top10（使用兼容MySQL 5.7的查询方式）
+	// 1. 获取全服Top10 - 每个用户只显示最好成绩
 	var globalTop10 []model.ScoreItem
 	err := h.DB.Raw(`
 		SELECT 
 			u.username,
-			fbs.score,
+			MAX(fbs.score) as score,
 			fbs.game_time,
 			fbs.played_at,
 			0 as ` + "`rank`" + `
 		FROM flappy_bird_scores fbs
 		JOIN users u ON fbs.user_id = u.id
-		ORDER BY fbs.score DESC, fbs.played_at ASC
+		GROUP BY fbs.user_id
+		ORDER BY score DESC, MIN(fbs.played_at) ASC
 		LIMIT 10
 	`).Scan(&globalTop10).Error
 

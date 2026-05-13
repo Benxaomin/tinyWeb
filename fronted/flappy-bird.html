@@ -872,25 +872,28 @@
                 document.getElementById('totalPlayers').textContent = '0';
             }
 
-            // 渲染个人记录（仅登录时）
+        // 渲染个人记录（仅登录时）
             const personalList = document.getElementById('personalLeaderboard');
             const personalSubtitle = document.getElementById('personalSubtitle');
             
             if (isLoggedIn()) {
                 if (data.my_top5 && data.my_top5.length > 0) {
+                    // 用户名只显示在标题，列表中不重复显示
+                    const username = data.my_top5[0].username;
+                    personalSubtitle.textContent = `${escapeHtml(username)} 的个人记录`;
+                    
                     personalList.innerHTML = data.my_top5.map((item, index) => `
                         <div class="leaderboard-item my-score">
                             <div class="rank-badge ${getRankClass(index + 1)}">${index + 1}</div>
                             <div class="player-info">
-                                <div class="player-name">${escapeHtml(item.username)}</div>
-                                <div class="player-meta">${formatDate(item.played_at)}</div>
+                                <div class="player-name">得分: ${item.score}</div>
+                                <div class="player-meta">${formatDateTime(item.played_at)}</div>
                             </div>
                             <div class="player-score">${item.score}</div>
                         </div>
                     `).join('');
                     
                     myBestScore = data.my_top5[0].score;
-                    personalSubtitle.textContent = '个人 Top 5';
                 } else {
                     personalList.innerHTML = `
                         <div class="loading-placeholder" style="padding: 30px;">
@@ -1059,6 +1062,23 @@
                     return '刚刚';
                 }
                 return `${date.getMonth() + 1}月${date.getDate()}日`;
+            } catch (e) {
+                return '刚刚';
+            }
+        }
+
+        // 格式化日期时间（包含时分）
+        function formatDateTime(dateStr) {
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    return '刚刚';
+                }
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                return `${month}月${day}日 ${hours}:${minutes} 游玩`;
             } catch (e) {
                 return '刚刚';
             }
