@@ -1017,7 +1017,7 @@
             document.getElementById('gameOverModal').classList.remove('show');
             document.getElementById('scoreSaveHint').style.display = 'none';
             document.getElementById('noSaveHint').style.display = 'none';
-            resetGame();
+            resetGameUI();
         }
 
         // 重新开始游戏
@@ -1094,17 +1094,14 @@
 
         // ==================== 游戏控制桥接 ====================
         
-        // 覆盖原有的游戏结束处理
-        let originalGameOver = null;
-
         function initGame() {
             // 等待 flappy-bird.js 加载完成
             const checkGameLoaded = () => {
-                if (typeof resetGame === 'function') {
+                if (typeof window.resetGame === 'function') {
                     console.log('✓Flappy Bird 游戏脚本已加载');
                     
-                    // 保存原始的游戏函数
-                    window.originalResetGame = resetGame;
+                    // 保存原始的游戏开始函数
+                    window._flappyBirdStart = window.startGame;
                     
                     // 监听游戏结束事件
                     window.addEventListener('gameOver', function(e) {
@@ -1124,25 +1121,21 @@
         function startGame() {
             console.log('开始游戏');
             document.getElementById('gameStatus').classList.remove('show');
-            isGameRunning = true;
+            window.isGameRunning = true;
             
             // 调用原始游戏开始函数
-            if (typeof window.originalResetGame === 'function') {
-                window.originalResetGame();
-            } else if (typeof resetGame === 'function') {
-                resetGame();
+            if (typeof window._flappyBirdStart === 'function') {
+                window._flappyBirdStart();
             } else {
-                console.error('游戏初始化失败：resetGame 函数未找到');
+                console.error('游戏初始化失败：startGame 函数未找到');
                 showToast('游戏加载失败，请刷新页面重试', 'error');
             }
         }
 
-        function resetGame() {
-            console.log('重置游戏');
+        function resetGameUI() {
+            console.log('重置游戏UI');
             document.getElementById('gameStatus').classList.add('show');
-            isGameRunning = false;
-            
-            // 游戏会自动重置，不需要额外调用
+            window.isGameRunning = false;
         }
     </script>
 </body>
