@@ -83,7 +83,8 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 		isLoggedIn = true
 	}
 
-	// 1. 获取全服Top10 - 每个用户只显示最好成绩（取最早达成的最高分记录）
+	// 1. 获取全服Top10 - 每个用户只显示最好成绩
+	// 使用LEFT JOIN排除法：找到没有被更高分超越的记录
 	var globalTop10 []model.ScoreItem
 	err := h.DB.Raw(`
 		SELECT 
@@ -92,20 +93,15 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 			fbs.game_time,
 			fbs.played_at,
 			0 as ` + "`rank`" + `
-		FROM (
-			SELECT user_id, MAX(score) as max_score
-			FROM flappy_bird_scores
-			GROUP BY user_id
-		) best
-		JOIN flappy_bird_scores fbs 
-			ON best.user_id = fbs.user_id 
-			AND best.max_score = fbs.score
+		FROM flappy_bird_scores fbs
 		JOIN users u ON fbs.user_id = u.id
-		WHERE fbs.played_at = (
-			SELECT MIN(played_at)
-			FROM flappy_bird_scores
-			WHERE user_id = fbs.user_id AND score = fbs.score
-		)
+		LEFT JOIN flappy_bird_scores fbs2 
+			ON fbs.user_id = fbs2.user_id 
+			AND (
+				fbs.score < fbs2.score 
+				OR (fbs.score = fbs2.score AND fbs.played_at > fbs2.played_at)
+			)
+		WHERE fbs2.id IS NULL
 		ORDER BY fbs.score DESC, fbs.played_at ASC
 		LIMIT 10
 	`).Scan(&globalTop10).Error
