@@ -634,7 +634,7 @@
                 <div class="game-status show" id="gameStatus">
                     <h2 class="status-title">Flappy Bird</h2>
                     <p class="status-subtitle">点击按钮开始游戏</p>
-                    <button class="start-btn" id="startBtn" onclick="startGame()">开始游戏</button>
+                    <button class="start-btn" id="startBtn" onclick="flappyBirdPageStart()">开始游戏</button>
                 </div>
             </div>
             
@@ -1133,17 +1133,17 @@
             document.getElementById('gameStatus').classList.remove('show');
             window.isGameRunning = true;
             
-            // 调用 flappy-bird.js 中的游戏开始函数
-            if (typeof window.startGame === 'function') {
-                window.startGame();
+            // 调用 flappy-bird.js 中的游戏开始函数（已保存到 _flappyBirdStart）
+            if (typeof window._flappyBirdStart === 'function') {
+                window._flappyBirdStart();
+            } else if (typeof window.gameStart === 'function') {
+                // 备用名称
+                window.gameStart();
             } else {
                 console.error('游戏初始化失败：startGame 函数未找到');
                 showToast('游戏加载失败，请刷新页面重试', 'error');
             }
         }
-        
-        // 兼容旧的函数名（用于按钮的 onclick）
-        window.startGame = flappyBirdPageStart;
 
         function resetGameUI() {
             console.log('重置游戏UI');
