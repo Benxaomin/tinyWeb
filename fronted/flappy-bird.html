@@ -1127,19 +1127,23 @@
             checkGameLoaded();
         }
 
-        function startGame() {
-            console.log('开始游戏');
+        // 包裹的游戏启动函数 - 避免覆盖 flappy-bird.js 中的 startGame
+        function flappyBirdPageStart() {
+            console.log('页面：开始游戏');
             document.getElementById('gameStatus').classList.remove('show');
             window.isGameRunning = true;
             
-            // 调用原始游戏开始函数
-            if (typeof window._flappyBirdStart === 'function') {
-                window._flappyBirdStart();
+            // 调用 flappy-bird.js 中的游戏开始函数
+            if (typeof window.startGame === 'function') {
+                window.startGame();
             } else {
                 console.error('游戏初始化失败：startGame 函数未找到');
                 showToast('游戏加载失败，请刷新页面重试', 'error');
             }
         }
+        
+        // 兼容旧的函数名（用于按钮的 onclick）
+        window.startGame = flappyBirdPageStart;
 
         function resetGameUI() {
             console.log('重置游戏UI');
