@@ -2,11 +2,11 @@
     // 游戏配置
     var CANVAS_WIDTH = 400;
     var CANVAS_HEIGHT = 600;
-    var GRAVITY = 0.25;
-    var JUMP_STRENGTH = -4.5;
-    var PIPE_SPEED = 2;
+    var GRAVITY = 0.3;
+    var JUMP_STRENGTH = -6;
+    var PIPE_SPEED = 2.5;
     var PIPE_SPAWN_RATE = 100;
-    var PIPE_GAP = 140;
+    var PIPE_GAP = 150;
     var PIPE_WIDTH = 60;
     
     // 游戏状态
@@ -36,15 +36,109 @@
     
     // 初始化音频上下文
     function initAudio() {
-        // 音频初始化为空实现，避免自动播放策略问题
-        audioCtx = null;
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.log('音频初始化失败:', e);
+            audioCtx = null;
+        }
     }
     
-    function playJumpSound() { /* 禁用音效 */ }
-    function playScoreSound() { /* 禁用音效 */ }
-    function playGameOverSound() { /* 禁用音效 */ }
-    function startBGM() { /* 禁用背景音乐 */ }
-    function stopBGM() { /* 禁用背景音乐 */ }
+    // 播放跳跃音效
+    function playJumpSound() {
+        if (!audioCtx || isMuted) return;
+        try {
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.frequency.value = 400;
+            osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+            
+            gain.gain.value = 0.3;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.1);
+        } catch (e) {
+            console.log('音效播放失败:', e);
+        }
+    }
+    
+    // 播放得分音效
+    function playScoreSound() {
+        if (!audioCtx || isMuted) return;
+        try {
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.frequency.value = 800;
+            
+            gain.gain.value = 0.3;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.1);
+        } catch (e) {
+            console.log('音效播放失败:', e);
+        }
+    }
+    
+    // 播放游戏结束音效
+    function playGameOverSound() {
+        if (!audioCtx || isMuted) return;
+        try {
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.frequency.value = 400;
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+            
+            gain.gain.value = 0.4;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch (e) {
+            console.log('音效播放失败:', e);
+        }
+    }
+    
+    // 背景音乐
+    function startBGM() {
+        if (!audioCtx || isMuted) return;
+        try {
+            // 简单的背景节奏
+            for (var i = 0; i < 3; i++) {
+                var osc = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.frequency.value = 200 + i * 50;
+                gain.gain.value = 0.05;
+                
+                osc.start(audioCtx.currentTime);
+                bgmOscillators.push(osc);
+            }
+        } catch (e) {
+            console.log('背景音乐启动失败:', e);
+        }
+    }
+    
+    function stopBGM() {
+        bgmOscillators.forEach(function(osc) {
+            try {
+                osc.stop();
+            } catch (e) {}
+        });
+        bgmOscillators = [];
+    }
     
     // 配色方案 - 使用琥珀橙金色调
     function getColors() {
