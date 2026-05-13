@@ -112,20 +112,22 @@
     // 背景音乐
     function startBGM() {
         if (!audioCtx || isMuted) return;
+        // 先停止之前的背景音乐，防止重复
+        stopBGM();
         try {
-            // 简单的背景节奏
-            for (var i = 0; i < 3; i++) {
-                var osc = audioCtx.createOscillator();
-                var gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.frequency.value = 200 + i * 50;
-                gain.gain.value = 0.05;
-                
-                osc.start(audioCtx.currentTime);
-                bgmOscillators.push(osc);
-            }
+            // 简单的背景节奏 - 只创建一个低频嗡鸣，避免电流音
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            // 使用三角波，更柔和
+            osc.type = 'triangle';
+            osc.frequency.value = 150;
+            gain.gain.value = 0.03;
+            
+            osc.start(audioCtx.currentTime);
+            bgmOscillators.push(osc);
         } catch (e) {
             console.log('背景音乐启动失败:', e);
         }
