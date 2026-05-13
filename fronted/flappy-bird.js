@@ -347,6 +347,7 @@
                 score++;
                 if (gameScore) gameScore.textContent = score;
                 pipesPassed++;
+                playScoreSound(); // 播放得分音效
             }
             
             // 碰撞检测
@@ -386,12 +387,19 @@
     
     // 跳跃
     function jump() {
+        // 首次跳跃时初始化音频上下文（需要用户交互）
+        if (!audioCtx) {
+            initAudio();
+        }
+        
         if (!isPlaying) {
             startGame();
+            playJumpSound(); // 播放跳跃音效
             return;
         }
         if (isPaused) return;
         bird.velocity = JUMP_STRENGTH;
+        playJumpSound(); // 播放跳跃音效
     }
     
     // 开始游戏（全局函数，供外部调用）
@@ -401,6 +409,9 @@
         isPlaying = true;
         isPaused = false;
         gameStartTime = Date.now();
+        
+        // 启动背景音乐
+        startBGM();
         
         if (startHint) startHint.classList.remove('show');
         
@@ -454,6 +465,8 @@
         isPlaying = false;
         cancelAnimationFrame(animationId);
         saveHighScore();
+        playGameOverSound(); // 播放游戏结束音效
+        stopBGM(); // 停止背景音乐
         
         // 触发gameOver事件，通知外部JS
         var gameOverEvent = new CustomEvent('gameOver', { detail: score });
