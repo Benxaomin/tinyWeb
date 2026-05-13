@@ -33,7 +33,7 @@ export STATIC_DIR="$PROJECT_DIR/fronted"
 export DB_HOST=localhost
 export DB_PORT=3306
 export DB_USER=root
-export DB_PASS=renhan007619
+export DB_PASS=
 export DB_NAME=tinyweb1
 nohup bash -c "./server.exe" > server.log 2>&1 &
 
