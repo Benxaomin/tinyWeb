@@ -91,7 +91,7 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 			fbs.score,
 			fbs.game_time,
 			fbs.played_at,
-			0 as rank
+			0 as ` + "`rank`" + `
 		FROM flappy_bird_scores fbs
 		JOIN users u ON fbs.user_id = u.id
 		ORDER BY fbs.score DESC, fbs.played_at ASC
@@ -116,7 +116,7 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 				fbs.score,
 				fbs.game_time,
 				fbs.played_at,
-				0 as rank
+				0 as `+"`rank`"+`
 			FROM flappy_bird_scores fbs
 			JOIN users u ON fbs.user_id = u.id
 			WHERE fbs.user_id = ?
@@ -174,7 +174,7 @@ func GetMyScoresHandler(h *GameHandler, w http.ResponseWriter, r *http.Request) 
 			fbs.score,
 			fbs.game_time,
 			fbs.played_at,
-			0 as rank
+			0 as `+"`rank`"+`
 		FROM flappy_bird_scores fbs
 		JOIN users u ON fbs.user_id = u.id
 		WHERE fbs.user_id = ?
