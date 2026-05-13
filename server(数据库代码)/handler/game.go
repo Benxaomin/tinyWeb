@@ -1,12 +1,15 @@
 // Package handler 游戏相关API处理器
 // =============================================
 // 作用：
-//   处理游戏排行榜相关的HTTP请求
+//
+//	处理游戏排行榜相关的HTTP请求
 //
 // 路由：
-//   POST   /api/game/flappy-bird/score      - 保存游戏得分
-//   GET    /api/game/flappy-bird/leaderboard - 获取排行榜（全服Top10 + 个人Top5）
-//   GET    /api/game/flappy-bird/my-scores   - 获取个人所有得分记录
+//
+//	POST   /api/game/flappy-bird/score      - 保存游戏得分
+//	GET    /api/game/flappy-bird/leaderboard - 获取排行榜（全服Top10 + 个人Top5）
+//	GET    /api/game/flappy-bird/my-scores   - 获取个人所有得分记录
+//
 // =============================================
 package handler
 
@@ -80,7 +83,7 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 		isLoggedIn = true
 	}
 
-	// 1. 获取全服Top10
+	// 1. 获取全服Top10（使用兼容MySQL 5.7的查询方式）
 	var globalTop10 []model.ScoreItem
 	err := h.DB.Raw(`
 		SELECT 
@@ -88,7 +91,7 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 			fbs.score,
 			fbs.game_time,
 			fbs.played_at,
-			ROW_NUMBER() OVER (ORDER BY fbs.score DESC, fbs.played_at ASC) as rank
+			0 as rank
 		FROM flappy_bird_scores fbs
 		JOIN users u ON fbs.user_id = u.id
 		ORDER BY fbs.score DESC, fbs.played_at ASC
@@ -97,6 +100,11 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 
 	if err != nil {
 		globalTop10 = []model.ScoreItem{}
+	}
+
+	// 手动设置排名
+	for i := range globalTop10 {
+		globalTop10[i].Rank = i + 1
 	}
 
 	// 2. 获取个人Top5（仅登录用户）
@@ -108,7 +116,7 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 				fbs.score,
 				fbs.game_time,
 				fbs.played_at,
-				ROW_NUMBER() OVER (ORDER BY fbs.score DESC, fbs.played_at ASC) as rank
+				0 as rank
 			FROM flappy_bird_scores fbs
 			JOIN users u ON fbs.user_id = u.id
 			WHERE fbs.user_id = ?
@@ -118,6 +126,11 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 
 		if err != nil {
 			myTop5 = []model.ScoreItem{}
+		}
+
+		// 手动设置排名
+		for i := range myTop5 {
+			myTop5[i].Rank = i + 1
 		}
 	}
 
@@ -161,7 +174,7 @@ func GetMyScoresHandler(h *GameHandler, w http.ResponseWriter, r *http.Request) 
 			fbs.score,
 			fbs.game_time,
 			fbs.played_at,
-			ROW_NUMBER() OVER (ORDER BY fbs.score DESC, fbs.played_at ASC) as rank
+			0 as rank
 		FROM flappy_bird_scores fbs
 		JOIN users u ON fbs.user_id = u.id
 		WHERE fbs.user_id = ?
@@ -171,6 +184,11 @@ func GetMyScoresHandler(h *GameHandler, w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		scores = []model.ScoreItem{}
+	}
+
+	// 手动设置排名
+	for i := range scores {
+		scores[i].Rank = i + 1
 	}
 
 	// 获取统计数据
