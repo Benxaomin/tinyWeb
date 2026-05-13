@@ -3,7 +3,7 @@
 # TinyWeb1 部署脚本
 # ====================
 
-PROJECT_DIR="/home/user/tinyWeb1"
+PROJECT_DIR="/home/user/tinyweb1"
 FRONTEND_DIR="$PROJECT_DIR/fronted"
 SERVER_CODE_DIR="$PROJECT_DIR/server(数据库代码)"
 
