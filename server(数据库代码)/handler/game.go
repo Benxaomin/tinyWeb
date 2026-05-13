@@ -88,14 +88,19 @@ func GetLeaderboardHandler(h *GameHandler, w http.ResponseWriter, r *http.Reques
 	err := h.DB.Raw(`
 		SELECT 
 			u.username,
-			MAX(fbs.score) as score,
+			fbs.score,
 			fbs.game_time,
 			fbs.played_at,
 			0 as ` + "`rank`" + `
 		FROM flappy_bird_scores fbs
 		JOIN users u ON fbs.user_id = u.id
-		GROUP BY fbs.user_id
-		ORDER BY score DESC, MIN(fbs.played_at) ASC
+		WHERE fbs.score = (
+			SELECT MAX(score) 
+			FROM flappy_bird_scores 
+			WHERE user_id = fbs.user_id
+		)
+		GROUP BY fbs.user_id, u.username, fbs.score, fbs.game_time, fbs.played_at
+		ORDER BY fbs.score DESC, fbs.played_at ASC
 		LIMIT 10
 	`).Scan(&globalTop10).Error
 

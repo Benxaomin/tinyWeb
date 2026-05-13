@@ -32,6 +32,7 @@
     // 音效系统
     var audioCtx = null;
     var bgmOscillators = [];
+    var bgmGains = []; // 存储gain节点以便清理
     var isMuted = false;
     
     // 初始化音频上下文
@@ -128,18 +129,28 @@
             
             osc.start(audioCtx.currentTime);
             bgmOscillators.push(osc);
+            bgmGains.push(gain);
         } catch (e) {
             console.log('背景音乐启动失败:', e);
         }
     }
     
     function stopBGM() {
+        // 停止振荡器
         bgmOscillators.forEach(function(osc) {
             try {
                 osc.stop();
+                osc.disconnect();
+            } catch (e) {}
+        });
+        // 断开增益节点
+        bgmGains.forEach(function(gain) {
+            try {
+                gain.disconnect();
             } catch (e) {}
         });
         bgmOscillators = [];
+        bgmGains = [];
     }
     
     // 配色方案 - 使用琥珀橙金色调
@@ -492,8 +503,33 @@
         jump();
     }, { passive: false });
     
+    // 检查游戏结束弹窗是否显示
+    function isGameOverModalVisible() {
+        var modal = document.getElementById('gameOverModal');
+        return modal && modal.classList.contains('show');
+    }
+    
+    // 关闭游戏结束弹窗
+    function closeGameOverModal() {
+        var modal = document.getElementById('gameOverModal');
+        if (modal && modal.classList.contains('show')) {
+            // 触发关闭按钮点击事件
+            var closeBtn = modal.querySelector('.modal-btn.secondary');
+            if (closeBtn) closeBtn.click();
+            return true;
+        }
+        return false;
+    }
+    
     // 键盘控制
     document.addEventListener('keydown', function(e) {
+        // 如果游戏结束弹窗显示，空格键先关闭弹窗
+        if ((e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'Enter') && isGameOverModalVisible()) {
+            e.preventDefault();
+            closeGameOverModal();
+            return;
+        }
+        
         // 只在画布可见时响应键盘
         if (!isPlaying && !startHint.classList.contains('show') && startHint.style.display === 'none') {
             return;
