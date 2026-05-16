@@ -49,6 +49,8 @@ import (
 )
 
 func main() {
+	// 2026-05-14 日常提交，保持 GitHub 活跃度 💚
+
 	// ============================================================
 	// 步骤 1: 加载配置
 	// ============================================================
@@ -134,10 +136,10 @@ func printConfigInfo() {
 // 通过实际写入、查询、更新操作验证 GORM 和表结构是否正常工作
 //
 // 测试步骤：
-//   1. 在测试库中插入一条测试记录
-//   2. 查询该记录，验证数据正确
-//   3. 更新访问次数，验证更新操作
-//   4. 清理测试数据
+//  1. 在测试库中插入一条测试记录
+//  2. 查询该记录，验证数据正确
+//  3. 更新访问次数，验证更新操作
+//  4. 清理测试数据
 func testVisitStats() {
 	fmt.Println("")
 	fmt.Println("🔍 开始测试 visit_stats 表...")
@@ -183,7 +185,7 @@ func testVisitStats() {
 	// 测试 3: 更新访问次数 - 模拟访客再次访问
 	if result.Error == nil {
 		updateErr := database.Model(&found).Updates(map[string]interface{}{
-			"visit_count":  gorm.Expr("visit_count + 1"), // 访问次数 +1
+			"visit_count":   gorm.Expr("visit_count + 1"), // 访问次数 +1
 			"last_visit_at": time.Now(),                   // 更新最后访问时间
 		}).Error
 		if updateErr != nil {
@@ -486,18 +488,19 @@ func startServer() {
 // 返回服务器运行状态和数据库连接信息
 //
 // 响应示例：
-//   GET /api/health
-//   {
-//     "code": 0,
-//     "message": "success",
-//     "data": {
-//       "status": "healthy",
-//       "env": "development",
-//       "main_db": "tinyweb1",
-//       "test_db": "tinyweb1_test",
-//       "time": "2026-04-07 19:00:00"
-//     }
-//   }
+//
+//	GET /api/health
+//	{
+//	  "code": 0,
+//	  "message": "success",
+//	  "data": {
+//	    "status": "healthy",
+//	    "env": "development",
+//	    "main_db": "tinyweb1",
+//	    "test_db": "tinyweb1_test",
+//	    "time": "2026-04-07 19:00:00"
+//	  }
+//	}
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -534,18 +537,22 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 // corsMiddleware CORS 跨域中间件
 // =============================================
 // 作用：
-//   在每个 HTTP 响应中添加 CORS 相关的头部，
-//   允许前端 JavaScript 从不同域名/端口调用此 API。
+//
+//	在每个 HTTP 响应中添加 CORS 相关的头部，
+//	允许前端 JavaScript 从不同域名/端口调用此 API。
 //
 // 为什么需要 CORS？
-//   前端页面可能部署在 example.com:80，
-//   后端 API 运行在 api.example.com:8081，
-//   浏览器的同源策略会阻止这种跨域请求。
-//   通过添加 Access-Control-Allow-* 头部来允许合法的跨域访问。
+//
+//	前端页面可能部署在 example.com:80，
+//	后端 API 运行在 api.example.com:8081，
+//	浏览器的同源策略会阻止这种跨域请求。
+//	通过添加 Access-Control-Allow-* 头部来允许合法的跨域访问。
 //
 // 安全注意事项：
-//   生产环境应将 ALLOWED_ORIGINS 设为具体的域名（如 https://yourdomain.com），
-//   仅开发环境使用 "*" 允许所有来源。
+//
+//	生产环境应将 ALLOWED_ORIGINS 设为具体的域名（如 https://yourdomain.com），
+//	仅开发环境使用 "*" 允许所有来源。
+//
 // =============================================
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -569,10 +576,10 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 		// 设置 CORS 响应头
 		if allowOrigin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", allowOrigin)                // 允许的来源
+			w.Header().Set("Access-Control-Allow-Origin", allowOrigin)                        // 允许的来源
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS") // 允许的方法
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")      // 允许的请求头
-			w.Header().Set("Access-Control-Max-Age", "86400") // 预检请求缓存时间（24小时）
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")     // 允许的请求头
+			w.Header().Set("Access-Control-Max-Age", "86400")                                 // 预检请求缓存时间（24小时）
 		}
 
 		// 处理预检请求 (OPTIONS)：浏览器在非简单请求前会先发送 OPTIONS 探测

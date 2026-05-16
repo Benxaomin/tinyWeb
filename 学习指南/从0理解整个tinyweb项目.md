@@ -22,10 +22,10 @@ HTML/CSS/JS基础有 / Go和数据库零基础 / 目前全懵
 
 ```
 第1周：███░░░░░░░░░░░░░ 高高高              Day1-3（✅已完成）
-第2周：█████████░░░░░░░ 高高高高中高中       Day4-12（Go+后端全读完）
-第3周：░░░░░█████░░░░░░ 高高高高中           Day13-17（数据库+认证+改功能）
-第4周：░░░░░░░░████░░░░ 高高高高             Day18-21（二轮精读+安全+前端）
-第5周：░░░░░░░░░░████░░ 高中中               Day22-25（架构图+验收+AI复述）
+第2周：████████░░░░░░░░ 高高高高中高中       Day4-11（Go+后端全读完）
+第3周：░░░░░█████░░░░░░ 高高高高中           Day12-16（数据库+认证+改功能）
+第4周：░░░░░░░░█████░░░ 高高高高             Day17-21（二轮精读+安全+前端）
+第5周：░░░░░░░░░░░████░ 高中中               Day22-27（架构图+验收+AI复述）
 
 高强度 = 2h 项目学习 + 写代码
 中强度 = 1-1.5h（看视频+实操+整理，类似Day3的强度）
@@ -686,7 +686,7 @@ sessions := []struct{Tag string; Duration int}{
 
 ---
 
-### Day 12（高强度）— 读 utils/ + middleware/ + session/
+### Day 11（高强度）— 读 utils/ + middleware/ + session/
 
 **认证模块的三个辅助包，每个都很短。**
 
@@ -737,14 +737,14 @@ protectedHandler("")           // 拒绝
 protectedHandler("jwt_token")  // 通过
 ```
 
-**Day 12 过关标准：**
+**Day 11 过关标准：**
 - [ ] 能画出 JWT 的三段结构（Header.Payload.Signature）
 - [ ] 能解释中间件的工作流程
 - [ ] 能解释 context.WithValue 的作用
 
 ---
 
-### Day 13（高强度）— 前后端联调走查
+### Day 12（高强度）— 前后端联调走查
 
 **目标：从前端第一行代码跟踪到数据库最后一行SQL。**
 
@@ -782,14 +782,14 @@ protectedHandler("jwt_token")  // 通过
 
 **每个箭头标注：对应代码哪一行。**
 
-**Day 13 过关标准：**
+**Day 12 过关标准：**
 - [ ] 时序图覆盖全部14个步骤
 - [ ] 每个步骤能定位到具体文件和行号
 - [ ] 合上资料能口述整个过程
 
 ---
 
-### Day 14（中强度）— 第2周总结 + 补漏
+### Day 13（中强度）— 第2周总结 + 补漏
 
 **自查清单：**
 
@@ -819,7 +819,7 @@ protectedHandler("jwt_token")  // 通过
 
 ---
 
-### Day 15（高强度）— SSH 进 MySQL 实操
+### Day 14（高强度）— SSH 进 MySQL 实操
 
 ```bash
 ssh user@1.15.224.88
@@ -835,7 +835,7 @@ SELECT * FROM visit_stats;
 SELECT visitor_ip, visit_count FROM visit_stats WHERE visit_count > 5;
 SELECT SUM(visit_count) FROM visit_stats;    -- 对应 GetVisitStats
 SELECT COUNT(*) FROM visit_stats;            -- 对应 GetVisitStats
-SELECT MAX(last_visit_at) FROM visit_stats;  -- 对应 GetVisitStats
+SELECT MAX(last_visit_at) FROM visit_stats;  -- 对应 GetVis itStats
 INSERT INTO visit_stats (...) VALUES ('127.0.0.1', 1, 'Test', 'Linux', NOW(), NOW());
 UPDATE visit_stats SET visit_count = visit_count + 1 WHERE visitor_ip = '127.0.0.1';
 DELETE FROM visit_stats WHERE visitor_ip = '127.0.0.1';
@@ -845,12 +845,12 @@ SELECT id, username, role FROM users;
 SELECT username, password_hash FROM users LIMIT 1;  -- 看 bcrypt 哈希长什么样
 ```
 
-**Day 15 过关标准：**
+**Day 14 过关标准：**
 - [ ] 上面SQL全部在服务器上执行过且理解结果
 
 ---
 
-### Day 16（高强度）— GORM 与 SQL 对应
+### Day 15（高强度）— GORM 与 SQL 对应
 
 ```go
 database.Create(&newRecord)           ↔ INSERT INTO
@@ -871,13 +871,13 @@ database.AutoMigrate(&Model{})        ↔ CREATE TABLE IF NOT EXISTS
 // 3. DELETE FROM visit_stats WHERE id = 1;
 ```
 
-**Day 16 过关标准：**
+**Day 15 过关标准：**
 - [ ] 每个 GORM 方法都能说出对应的 SQL
 - [ ] 练习跑通
 
 ---
 
-### Day 17（高强度）— 读其他 handler
+### Day 16（高强度）— 读其他 handler
 
 快速过 `todo.go`、`guestbook.go`、`setting.go`。模式和 `visit.go` 完全一样。
 
@@ -887,13 +887,13 @@ database.AutoMigrate(&Model{})        ↔ CREATE TABLE IF NOT EXISTS
 | guestbook.go | CreateMessage / GetMessages | guestbook |
 | setting.go | GetSettings / UpdateSettings | settings |
 
-**Day 17 过关标准：**
+**Day 16 过关标准：**
 - [ ] 能说出每个 handler 的 CRUD 函数名
 - [ ] 能指出和 visit.go 的模式差异（如果有的话）
 
 ---
 
-### Day 18（高强度）— 数据库设计分析 + 动手改功能
+### Day 17（高强度）— 数据库设计分析 + 动手改功能
 
 **思考：**
 
@@ -910,13 +910,13 @@ database.AutoMigrate(&Model{})        ↔ CREATE TABLE IF NOT EXISTS
 - **选项 B（中等）**：给留言板加分页数字显示
 - **选项 C（中等）**：加"今日访问数"字段
 
-**Day 18 过关标准：**
+**Day 17 过关标准：**
 - [ ] 功能改动完成并部署验证
 - [ ] 能说出改了哪些文件、每处改动的原因
 
 ---
 
-### Day 19（高强度）— 认证全链路精读
+### Day 18（高强度）— 认证全链路精读
 
 **画认证流程时序图（三个流程）：**
 
@@ -926,14 +926,14 @@ database.AutoMigrate(&Model{})        ↔ CREATE TABLE IF NOT EXISTS
 
 **获取用户：** 前端 → GET /api/auth/me(Bearer token) → AuthMiddleware验token → GetCurrentUser(从context取) → 返回
 
-**Day 19 过关标准：**
+**Day 18 过关标准：**
 - [ ] 三个流程的每个步骤能口述
 - [ ] 能解释 GetCurrentUser 不需要查数据库
 - [ ] 能说出 localStorage 和 sessionStorage 的区别
 
 ---
 
-### Day 20（中强度）— 读 fronted/flappy-bird.js（Flappy Bird游戏）
+### Day 19（中强度）— 读 fronted/flappy-bird.js（Flappy Bird游戏）
 
 **纯前端游戏，理解游戏循环和Canvas绘图。**
 
@@ -986,7 +986,7 @@ timer = setInterval(() => {
 }, 1000);
 ```
 
-**Day 20 过关标准：**
+**Day 19 过关标准：**
 - [ ] 能说出游戏循环的工作原理
 - [ ] 能理解 Canvas 的基本绘图操作
 - [ ] 能解释碰撞检测的矩形相交判断
@@ -1001,30 +1001,30 @@ timer = setInterval(() => {
 
 ---
 
-### Day 23（高强度）— 第二轮精读 main.go + visit.go
+### Day 20（高强度）— 第二轮精读 main.go + visit.go
 
 重新读，标注：
 - 懂了的地方 → 绿色
 - 还不懂 → 红色，重点攻克
 
-**Day 23 过关标准：**
+**Day 20 过关标准：**
 - [ ] 没有红色标记
 - [ ] 能不看代码默写 RecordVisit 四步
 
 ---
 
-### Day 24（高强度）— 第二轮精读 auth.go + index.html
+### Day 21（高强度）— 第二轮精读 auth.go + index.html
 
 重新读 auth.go 和 index.html（3787-3903行 + 3905-4183行）。
 
-**Day 24 过关标准：**
+**Day 21 过关标准：**
 - [ ] auth.go 没有红色标记
 - [ ] 能不看代码口述 Login 七步
 - [ ] 能说出 AuthManager 的主要方法名和作用
 
 ---
 
-### Day 25（中强度）— 安全和性能分析
+### Day 22（中强度）— 安全和性能分析
 
 **安全问题：**
 
@@ -1046,13 +1046,13 @@ timer = setInterval(() => {
 ✅ 连接池 → MaxOpenConns=10，小项目够了
 ```
 
-**Day 21 过关标准：**
+**Day 22 过关标准：**
 - [ ] 能说出3个以上安全隐患和修复思路
 - [ ] 能说出2个以上性能优化方向
 
 ---
 
-### Day 22（高强度）— 读 index.html 其他模块
+### Day 23（高强度）— 读 index.html 其他模块
 
 ```
 □ 搜索 todo 相关 JS → 对应 todo.go
@@ -1060,7 +1060,7 @@ timer = setInterval(() => {
 □ 找到前端 fetch URL 和后端路由的对应关系
 ```
 
-**Day 22 过关标准：**
+**Day 23 过关标准：**
 - [ ] 能说出备忘录和留言板前端代码的位置
 - [ ] 能找到每个 fetch 对应的后端 handler
 - [ ] 能说出 AuthManager 和 IIFE 的结构区别
@@ -1075,7 +1075,7 @@ timer = setInterval(() => {
 
 ---
 
-### Day 22（高强度）— 画完整架构图
+### Day 24（高强度）— 画完整架构图
 
 **不用看代码，凭记忆画。画完再对照代码修正。**
 
@@ -1104,12 +1104,12 @@ timer = setInterval(() => {
    └── CRUD /api/todos → TodoHandlers 等
 ```
 
-**Day 22 过关标准：**
+**Day 24 过关标准：**
 - [ ] 不看代码画出来，对照修正不超过3处错误
 
 ---
 
-### Day 23-24（高强度）— 最终验收
+### Day 25-26（高强度）— 最终验收
 
 **逐项检查：**
 
@@ -1127,11 +1127,11 @@ timer = setInterval(() => {
 □ 至少做过一次功能改动并部署验证
 ```
 
-**有不通过的项，Day 24 专门补。**
+**有不通过的项，Day 26 专门补。**
 
 ---
 
-### Day 25（中强度）— AI 复述验收
+### Day 27（中强度）— AI 复述验收
 
 **给AI文字复述全流程，让AI评分。**
 
@@ -1150,7 +1150,7 @@ timer = setInterval(() => {
 10. 给AI复述后让AI逐项评分（满分10分），低于8分的回去补
 ```
 
-**Day 25 过关标准：**
+**Day 27 过关标准：**
 - [ ] AI评分每项 ≥ 8分
 - [ ] 低于8分的已经补完
 
