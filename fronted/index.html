@@ -4123,6 +4123,13 @@
             <div class="focus-chart-wrap">
                 <canvas id="focusBarChart" width="320" height="160"></canvas>
             </div>
+            <!-- 平均值开关按钮 -->
+            <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:6px;">
+                <button id="focusAvgToggle" class="focus-avg-btn" style="display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;border:1px solid var(--avatar-border);background:transparent;color:var(--text-sub);font-size:0.68rem;cursor:pointer;transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;">
+                    <i class="fa-solid fa-eye" id="focusAvgEyeIcon" style="font-size:0.65rem;"></i>
+                    <span>平均</span>
+                </button>
+            </div>
             <div class="focus-chart-hint" style="font-size:0.65rem;color:var(--text-dim);text-align:center;margin-top:6px;">
                 按 <kbd style="font-family:monospace;background:var(--social-bg);padding:1px 4px;border-radius:3px;">←</kbd> <kbd style="font-family:monospace;background:var(--social-bg);padding:1px 4px;border-radius:3px;">→</kbd> 方向键切换周次（查看所有历史记录）
             </div>
@@ -6665,6 +6672,12 @@
             // 最早有记录的日期（从后端获取）
             _earliestDate: null,
 
+            // 平均值虚线显示开关（默认显示）
+            _showAvgLine: true,
+
+            // 当前条形图数据（用于计算平均值）
+            _barChartData: [],
+
             // ---- 切换报告面板 ----
             toggleReport: function() {
                 var bubble = document.getElementById('focusReportBubble');
@@ -7043,6 +7056,9 @@
                             }
                         }
 
+                        // 保存当前数据用于平均值计算
+                        self._barChartData = dayData;
+
                         // 只有本周才更新累计成就显示
                         if (self._chartWeekOffset === 0) {
                             var hours = (totalSeconds / 3600).toFixed(1);
@@ -7054,6 +7070,11 @@
                         var isDark = !document.documentElement.classList.contains('light');
                         var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
                         var textColor = isDark ? '#aaa' : '#888';
+                        var accentColor = isDark ? '#e8a86d' : '#b87333';
+
+                        // 计算平均值
+                        var sum = dayData.reduce(function(a, b) { return a + b; }, 0);
+                        var avg = dayData.length > 0 ? sum / dayData.length : 0;
 
                         // 计算本周最大值，用于热力色比例
                         var weekMax = Math.max.apply(null, dayData) || 180;
@@ -7064,6 +7085,53 @@
                         });
                         
                         var ctx = document.getElementById('focusBarChart').getContext('2d');
+                        
+                        // 创建自定义插件：在条形上方显示数字 + 平均值虚线
+                        var numberLabelPlugin = {
+                            id: 'numberLabels',
+                            afterDatasetsDraw: function(chart) {
+                                var ctx2 = chart.ctx;
+                                chart.data.datasets.forEach(function(dataset, i) {
+                                    var meta = chart.getDatasetMeta(i);
+                                    meta.data.forEach(function(bar, index) {
+                                        var value = dataset.data[index];
+                                        if (value > 0) {
+                                            ctx2.save();
+                                            ctx2.fillStyle = textColor;
+                                            ctx2.font = 'bold 10px "Noto Sans SC", sans-serif';
+                                            ctx2.textAlign = 'center';
+                                            ctx2.textBaseline = 'bottom';
+                                            ctx2.fillText(value, bar.x, bar.y - 2);
+                                            ctx2.restore();
+                                        }
+                                    });
+                                });
+
+                                // 绘制平均值虚线（如果开启）
+                                if (self._showAvgLine && avg > 0) {
+                                    var yScale = chart.scales.y;
+                                    var yPos = yScale.getPixelForValue(avg);
+                                    
+                                    ctx2.save();
+                                    ctx2.beginPath();
+                                    ctx2.setLineDash([5, 5]);
+                                    ctx2.strokeStyle = accentColor;
+                                    ctx2.lineWidth = 1.5;
+                                    ctx2.moveTo(chart.scales.x.left, yPos);
+                                    ctx2.lineTo(chart.scales.x.right, yPos);
+                                    ctx2.stroke();
+                                    
+                                    // 绘制"平均"文字标签
+                                    ctx2.fillStyle = accentColor;
+                                    ctx2.font = '10px "Noto Sans SC", sans-serif';
+                                    ctx2.textAlign = 'left';
+                                    ctx2.textBaseline = 'bottom';
+                                    ctx2.fillText('平均 ' + avg.toFixed(1) + '分', chart.scales.x.left + 4, yPos - 3);
+                                    ctx2.restore();
+                                }
+                            }
+                        };
+
                         self._barChart = new Chart(ctx, {
                             type: 'bar',
                             data: {
@@ -7100,14 +7168,48 @@
                                         }
                                     }
                                 }
-                            }
+                            },
+                            plugins: [numberLabelPlugin]
                         });
+
+                        // 绑定平均值开关按钮事件（只绑定一次）
+                        self._bindAvgToggleEvent();
                     })
                     .catch(function(err) {
                         console.warn('[FocusTimer] 加载条形图数据失败:', err);
                         // 即使出错也渲染空图表
                         self._drawEmptyBarChart();
                     });
+            },
+
+            // ---- 绑定平均值开关事件 ----
+            _avgToggleBound: false,
+            _bindAvgToggleEvent: function() {
+                if (this._avgToggleBound) return;
+                var self = this;
+                
+                document.getElementById('focusAvgToggle').addEventListener('click', function() {
+                    self._showAvgLine = !self._showAvgLine;
+                    
+                    // 更新图标状态
+                    var eyeIcon = document.getElementById('focusAvgEyeIcon');
+                    var btn = document.getElementById('focusAvgToggle');
+                    
+                    if (self._showAvgLine) {
+                        eyeIcon.className = 'fa-solid fa-eye';
+                        btn.style.opacity = '1';
+                    } else {
+                        eyeIcon.className = 'fa-solid fa-eye-slash';
+                        btn.style.opacity = '0.5';
+                    }
+                    
+                    // 重绘图表
+                    if (self._barChart) {
+                        self._barChart.update();
+                    }
+                });
+                
+                this._avgToggleBound = true;
             },
 
             // ---- 无数据时绘制空条形图 ----
