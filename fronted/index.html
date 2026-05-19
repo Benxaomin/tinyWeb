@@ -5791,6 +5791,42 @@
         // ============================================================
         // 专注计时器模块（FocusTimer）
         // ============================================================
+        
+        // 热力阶梯色功能：根据专注时长返回渐变色（绿色→黄色→橙色→红色）
+        // 解决问题：不同周的Y轴上限不同，难以跨周比较
+        function getFocusHeatColor(minutes, maxMinutes) {
+            // 如果没有提供maxMinutes，使用固定阈值
+            // 0-60分钟：绿色系（低强度）
+            // 60-120分钟：黄绿色→黄色（中等）
+            // 120-180分钟：黄色→橙色（较高）
+            // 180+分钟：橙色→红色（高强度）
+            
+            var ratio = maxMinutes > 0 ? minutes / maxMinutes : minutes / 180;
+            ratio = Math.min(1, ratio); // 限制在0-1之间
+            
+            var r, g, b;
+            if (ratio <= 0.33) {
+                // 绿色 → 黄绿色
+                var t = ratio / 0.33;
+                r = Math.round(76 + (163 - 76) * t);   // #4C → #A3
+                g = Math.round(175 + (190 - 175) * t); // #AF → #BE
+                b = Math.round(80 + (80 - 80) * t);    // #50 → #50
+            } else if (ratio <= 0.66) {
+                // 黄绿色 → 橙色
+                var t = (ratio - 0.33) / 0.33;
+                r = Math.round(163 + (230 - 163) * t);  // #A3 → #E6
+                g = Math.round(190 + (126 - 190) * t);  // #BE → #7E
+                b = Math.round(80 + (34 - 80) * t);     // #50 → #22
+            } else {
+                // 橙色 → 红色
+                var t = (ratio - 0.66) / 0.34;
+                r = Math.round(230 + (231 - 230) * t);  // #E6 → #E7
+                g = Math.round(126 + (76 - 126) * t);   // #7E → #4C
+                b = Math.round(34 + (60 - 34) * t);     // #22 → #3C
+            }
+            
+            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        }
         // 设计思路：类似 AuthManager 的对象模式
         // 状态机：idle → running → paused → idle
         // 方法：init / selectTag / setDuration / start / pause / reset / tick / finish
@@ -7028,6 +7064,14 @@
                         var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
                         var textColor = isDark ? '#aaa' : '#888';
 
+                        // 计算本周最大值，用于热力色比例
+                        var weekMax = Math.max.apply(null, dayData) || 180;
+                        
+                        // 生成热力阶梯色数组（每个条形根据时长不同颜色）
+                        var heatColors = dayData.map(function(mins) {
+                            return getFocusHeatColor(mins, weekMax);
+                        });
+                        
                         var ctx = document.getElementById('focusBarChart').getContext('2d');
                         self._barChart = new Chart(ctx, {
                             type: 'bar',
@@ -7036,8 +7080,8 @@
                                 datasets: [{
                                     label: '专注(分钟)',
                                     data: dayData,
-                                    backgroundColor: 'rgba(108, 92, 231, 0.6)',
-                                    borderColor: '#6c5ce7',
+                                    backgroundColor: heatColors,
+                                    borderColor: heatColors.map(function(c) { return c.replace('rgb', 'rgba').replace(')', ',0.8)'); }),
                                     borderWidth: 1,
                                     borderRadius: 4,
                                     barPercentage: 0.6
