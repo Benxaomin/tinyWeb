@@ -5792,40 +5792,31 @@
         // 专注计时器模块（FocusTimer）
         // ============================================================
         
-        // 热力阶梯色功能：根据专注时长返回渐变色（绿色→黄色→橙色→红色）
-        // 解决问题：不同周的Y轴上限不同，难以跨周比较
+        // 热力阶梯色功能：紫色系配色，视觉顺眼有区分度
+        // 浅紫 → 中紫 → 深紫 → 紫蓝 → 发光紫（超强）
         function getFocusHeatColor(minutes, maxMinutes) {
-            // 如果没有提供maxMinutes，使用固定阈值
-            // 0-60分钟：绿色系（低强度）
-            // 60-120分钟：黄绿色→黄色（中等）
-            // 120-180分钟：黄色→橙色（较高）
-            // 180+分钟：橙色→红色（高强度）
+            // 紫色系阶梯（柔和、顺眼、有区分度）
+            // 0-60分钟：浅紫 #a29bfe（起步）
+            // 60-120分钟：中紫 #6c5ce7（常规）
+            // 120-180分钟：深紫 #4834d4（高效）
+            // 180+分钟：紫蓝 #3742fa（深度）
+            // 超高时长：发光紫 #ff6b9d（超强，带发光效果）
             
             var ratio = maxMinutes > 0 ? minutes / maxMinutes : minutes / 180;
-            ratio = Math.min(1, ratio); // 限制在0-1之间
+            ratio = Math.min(1, ratio);
             
-            var r, g, b;
+            // 直接返回对应的颜色（固定阶梯，不渐变）
             if (ratio <= 0.33) {
-                // 绿色 → 黄绿色
-                var t = ratio / 0.33;
-                r = Math.round(76 + (163 - 76) * t);   // #4C → #A3
-                g = Math.round(175 + (190 - 175) * t); // #AF → #BE
-                b = Math.round(80 + (80 - 80) * t);    // #50 → #50
-            } else if (ratio <= 0.66) {
-                // 黄绿色 → 橙色
-                var t = (ratio - 0.33) / 0.33;
-                r = Math.round(163 + (230 - 163) * t);  // #A3 → #E6
-                g = Math.round(190 + (126 - 190) * t);  // #BE → #7E
-                b = Math.round(80 + (34 - 80) * t);     // #50 → #22
+                return '#a29bfe';  // 浅紫 - 起步
+            } else if (ratio <= 0.55) {
+                return '#6c5ce7';  // 中紫 - 常规
+            } else if (ratio <= 0.75) {
+                return '#4834d4';  // 深紫 - 高效
+            } else if (ratio <= 0.9) {
+                return '#3742fa';  // 紫蓝 - 深度
             } else {
-                // 橙色 → 红色
-                var t = (ratio - 0.66) / 0.34;
-                r = Math.round(230 + (231 - 230) * t);  // #E6 → #E7
-                g = Math.round(126 + (76 - 126) * t);   // #7E → #4C
-                b = Math.round(34 + (60 - 34) * t);     // #22 → #3C
+                return '#ff6b9d';  // 发光紫 - 超强
             }
-            
-            return 'rgb(' + r + ',' + g + ',' + b + ')';
         }
         // 设计思路：类似 AuthManager 的对象模式
         // 状态机：idle → running → paused → idle
@@ -7081,10 +7072,8 @@
                                     label: '专注(分钟)',
                                     data: dayData,
                                     backgroundColor: heatColors,
-                                    borderColor: heatColors.map(function(c) { return c.replace('rgb', 'rgba').replace(')', ',0.8)'); }),
-                                    borderWidth: 1,
-                                    borderRadius: 4,
-                                    barPercentage: 0.6
+                                    borderWidth: 0,  // 无边框，避免边缘模糊
+                                    borderRadius: 0  // 无圆角，确保边缘清晰
                                 }]
                             },
                             options: {
