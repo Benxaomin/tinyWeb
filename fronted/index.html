@@ -7076,13 +7076,8 @@
                         var sum = dayData.reduce(function(a, b) { return a + b; }, 0);
                         var avg = dayData.length > 0 ? sum / dayData.length : 0;
 
-                        // 计算本周最大值，用于热力色比例
-                        var weekMax = Math.max.apply(null, dayData) || 180;
-                        
-                        // 生成热力阶梯色数组（每个条形根据时长不同颜色）
-                        var heatColors = dayData.map(function(mins) {
-                            return getFocusHeatColor(mins, weekMax);
-                        });
+                        // 统一紫色（不再使用热力阶梯色）
+                        var barColor = '#6c5ce7';
                         
                         var ctx = document.getElementById('focusBarChart').getContext('2d');
                         
@@ -7139,9 +7134,10 @@
                                 datasets: [{
                                     label: '专注(分钟)',
                                     data: dayData,
-                                    backgroundColor: heatColors,
-                                    borderWidth: 0,  // 无边框，避免边缘模糊
-                                    borderRadius: 0  // 无圆角，确保边缘清晰
+                                    backgroundColor: barColor,
+                                    borderWidth: 0,
+                                    borderRadius: 4,
+                                    barPercentage: 0.6
                                 }]
                             },
                             options: {
