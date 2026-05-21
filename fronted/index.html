@@ -6988,11 +6988,9 @@
                     '<span class="focus-chart-legend-item" style="color:var(--text-dim)">暂无专注记录</span>';
             },
 
-            // ---- 绘制水平条形图（按周显示：周一到周日）----
-            drawBarChart: function() {
-                var self = this;
-                
-                // 计算当前周次（周一到周日）的日期范围
+            // ---- 计算指定周偏移的周一到周日日期 ----
+            // weekOffset: 0=本周, -7=上周, -14=上上周, 以此类推
+            _getWeekDates: function(weekOffset) {
                 var today = new Date();
                 var currentDayOfWeek = today.getDay(); // 0=周日, 1=周一, ..., 6=周六
                 
@@ -7005,17 +7003,26 @@
                 monday.setDate(today.getDate() - daysToMonday);
                 
                 // 应用周偏移（每次偏移7天）
-                monday.setDate(monday.getDate() + this._chartWeekOffset * 7);
+                monday.setDate(monday.getDate() + weekOffset);
                 
                 // 生成周一到周日的7个日期
                 var weekDates = [];
-                var dayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
                 for (var i = 0; i < 7; i++) {
                     var d = new Date(monday);
                     d.setDate(monday.getDate() + i);
                     weekDates.push(d);
                 }
+                
+                return weekDates;
+            },
 
+            // ---- 绘制水平条形图（按周显示：周一到周日）----
+            drawBarChart: function() {
+                var self = this;
+                
+                // 获取当前查看的周日期（周一到周日）
+                var weekDates = this._getWeekDates(this._chartWeekOffset);
+                
                 // 构建日期范围参数（周一到周日）
                 var startDateStr = weekDates[0].getFullYear() + '-' +
                     String(weekDates[0].getMonth() + 1).padStart(2, '0') + '-' +
