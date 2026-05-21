@@ -7087,22 +7087,25 @@
                         // 保存当前数据用于平均值计算
                         self._barChartData = dayData;
 
-                        // 只有本周才更新累计成就显示
-                        if (self._chartWeekOffset === 0) {
-                            var hours = (totalSeconds / 3600).toFixed(1);
-                            if (hours.endsWith('.0')) hours = hours.slice(0, -2);
-                            document.getElementById('focusTotalTime').textContent = hours + '小时';
-                            document.getElementById('focusTotalSessions').textContent = totalSessions;
-                        }
+            // 累计成就单独加载（不按周次）
+                        self.loadTotalAchievement();
 
                         var isDark = !document.documentElement.classList.contains('light');
                         var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
                         var textColor = isDark ? '#aaa' : '#888';
                         var avgLineColor = 'rgba(108, 92, 231, 0.4)';  // 淡紫色虚线
 
-                        // 计算平均值
+            // 计算平均值（当前周按已过天数计算，历史周按7天计算）
                         var sum = dayData.reduce(function(a, b) { return a + b; }, 0);
-                        var avg = dayData.length > 0 ? sum / dayData.length : 0;
+                        var avgDivisor = 7; // 默认7天
+                        if (self._chartWeekOffset === 0) {
+                            // 当前周：计算已过天数（周一到今天）
+                            var today = new Date();
+                            var currentDayOfWeek = today.getDay();
+                            var daysPassed = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+                            avgDivisor = Math.max(1, daysPassed); // 至少1天避免除0
+                        }
+                        var avg = avgDivisor > 0 ? sum / avgDivisor : 0;
 
                         // 统一紫色（不再使用热力阶梯色）
                         var barColor = '#6c5ce7';
@@ -7309,6 +7312,33 @@
                         }
                     }
                 });
+            },
+
+            // ---- 加载累计成就（全部历史数据）----
+            loadTotalAchievement: function() {
+                var self = this;
+                // 使用不带日期范围的API获取全部历史总计
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/summary')
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res.code === 0 && res.data) {
+                            var totalSeconds = res.data.total_seconds || 0;
+                            var totalSessions = res.data.total_sessions || 0;
+                            
+                            // 格式化为小时（保留1位小数）
+                            var hours = (totalSeconds / 3600).toFixed(1);
+                            // 去掉末尾的.0（如10.0 → 10）
+                            if (hours.endsWith('.0')) {
+                                hours = hours.slice(0, -2);
+                            }
+                            
+                            document.getElementById('focusTotalTime').textContent = hours + '小时';
+                            document.getElementById('focusTotalSessions').textContent = totalSessions;
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('[FocusTimer] 加载累计成就失败:', err);
+                    });
             },
 
             // ---- 加载今日历史记录列表 ----
