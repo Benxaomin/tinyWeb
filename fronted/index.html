@@ -7096,16 +7096,26 @@
                         var avgLineColor = 'rgba(108, 92, 231, 0.4)';  // 淡紫色虚线
 
             // 计算平均值（当前周按已过天数计算，历史周按7天计算）
-                        var sum = dayData.reduce(function(a, b) { return a + b; }, 0);
-                        var avgDivisor = 7; // 默认7天
+                        var sum, avgDivisor, avg;
+                        
                         if (self._chartWeekOffset === 0) {
-                            // 当前周：计算已过天数（周一到今天）
+                            // 当前周：只计算已过天数的数据（不包括今天）
                             var today = new Date();
                             var currentDayOfWeek = today.getDay();
+                            // 已过天数（周一到昨天）：周四是3天（周一、周二、周三）
                             var daysPassed = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
-                            avgDivisor = Math.max(1, daysPassed); // 至少1天避免除0
+                            avgDivisor = Math.max(1, daysPassed);
+                            
+                            // 只取前 daysPassed 天的数据（排除今天）
+                            var passedDaysData = dayData.slice(0, daysPassed);
+                            sum = passedDaysData.reduce(function(a, b) { return a + b; }, 0);
+                            avg = sum / avgDivisor;
+                        } else {
+                            // 历史周：7天数据全部参与计算
+                            avgDivisor = 7;
+                            sum = dayData.reduce(function(a, b) { return a + b; }, 0);
+                            avg = sum / avgDivisor;
                         }
-                        var avg = avgDivisor > 0 ? sum / avgDivisor : 0;
 
                         // 统一紫色（不再使用热力阶梯色）
                         var barColor = '#6c5ce7';
