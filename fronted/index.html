@@ -6988,31 +6988,44 @@
                     '<span class="focus-chart-legend-item" style="color:var(--text-dim)">暂无专注记录</span>';
             },
 
-            // ---- 绘制水平条形图（近7天）----
+            // ---- 绘制水平条形图（按周显示：周一到周日）----
             drawBarChart: function() {
                 var self = this;
-                // 根据偏移量计算要请求的日期范围
-                var endOffset = this._chartWeekOffset; // 结束日期偏移（0=今天）
-                var startOffset = endOffset - 6;        // 开始日期偏移（往前6天）
+                
+                // 计算当前周次（周一到周日）的日期范围
+                var today = new Date();
+                var currentDayOfWeek = today.getDay(); // 0=周日, 1=周一, ..., 6=周六
+                
+                // 调整为周一为第一天：计算到本周一的天数偏移
+                // 如果今天是周日(0)，则本周一是6天前；否则是(currentDayOfWeek-1)天前
+                var daysToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+                
+                // 本周一的日期
+                var monday = new Date(today);
+                monday.setDate(today.getDate() - daysToMonday);
+                
+                // 应用周偏移（每次偏移7天）
+                monday.setDate(monday.getDate() + this._chartWeekOffset * 7);
+                
+                // 生成周一到周日的7个日期
+                var weekDates = [];
+                var dayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                for (var i = 0; i < 7; i++) {
+                    var d = new Date(monday);
+                    d.setDate(monday.getDate() + i);
+                    weekDates.push(d);
+                }
 
-                // 构建日期范围参数
-                var endDate = new Date();
-                endDate.setDate(endDate.getDate() + endOffset);
-                var startDate = new Date();
-                startDate.setDate(startDate.getDate() + startOffset);
-
-                var startDateStr = startDate.getFullYear() + '-' +
-                    String(startDate.getMonth() + 1).padStart(2, '0') + '-' +
-                    String(startDate.getDate()).padStart(2, '0');
-                var endDateStr = endDate.getFullYear() + '-' +
-                    String(endDate.getMonth() + 1).padStart(2, '0') + '-' +
-                    String(endDate.getDate()).padStart(2, '0');
+                // 构建日期范围参数（周一到周日）
+                var startDateStr = weekDates[0].getFullYear() + '-' +
+                    String(weekDates[0].getMonth() + 1).padStart(2, '0') + '-' +
+                    String(weekDates[0].getDate()).padStart(2, '0');
+                var endDateStr = weekDates[6].getFullYear() + '-' +
+                    String(weekDates[6].getMonth() + 1).padStart(2, '0') + '-' +
+                    String(weekDates[6].getDate()).padStart(2, '0');
 
                 // 使用带日期范围的API
-                var apiUrl = this.API_BASE + '/api/focus/summary?days=7';
-                if (this._chartWeekOffset !== 0) {
-                    apiUrl = this.API_BASE + '/api/focus/summary?start=' + startDateStr + '&end=' + endDateStr;
-                }
+                var apiUrl = this.API_BASE + '/api/focus/summary?start=' + startDateStr + '&end=' + endDateStr;
 
                 AuthManager.fetchWithAuth(apiUrl)
                     .then(function(r) { return r.json(); })
@@ -7026,9 +7039,10 @@
                         // 构建日期标签和数据（根据当前周次偏移）
                         var dayLabels = [];
                         var dayData = [];
-                        for (var i = 6; i >= 0; i--) {
-                            var d = new Date();
-                            d.setDate(d.getDate() + endOffset - i);
+                        
+                        // 使用已计算的 weekDates 生成标签和数据（周一到周日）
+                        for (var i = 0; i < 7; i++) {
+                            var d = weekDates[i];
                             var shortLabel = (d.getMonth() + 1) + '/' + d.getDate();
                             dayLabels.push(shortLabel);
                             dayData.push(0); // 默认0，后面再填充实际数据
@@ -7044,10 +7058,9 @@
                             totalSeconds = res.data.total_seconds || 0;
                             totalSessions = res.data.total_sessions || 0;
 
-                            // 填充实际数据
+                            // 填充实际数据（匹配周一到周日的日期）
                             for (var j = 0; j < 7; j++) {
-                                var d = new Date();
-                                d.setDate(d.getDate() + endOffset - (6 - j));
+                                var d = weekDates[j];
                                 var year = d.getFullYear();
                                 var month = String(d.getMonth() + 1).padStart(2, '0');
                                 var day = String(d.getDate()).padStart(2, '0');
