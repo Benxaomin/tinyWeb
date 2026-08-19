@@ -2946,6 +2946,21 @@
             gap: 12px;
             justify-content: center;
         }
+        /* 暂停时刻提示（暂停时显示，恢复时隐藏）*/
+        .focus-pause-time {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 12px;
+            font-size: 0.78rem;
+            color: #e17055;
+            opacity: 0.85;
+            letter-spacing: 0.3px;
+        }
+        .focus-pause-time i {
+            font-size: 0.72rem;
+        }
         .focus-ctrl-btn {
             width: 52px; height: 52px;
             border-radius: 50%;
@@ -5192,6 +5207,12 @@
                 </button>
             </div>
 
+            <!-- 暂停时刻提示（暂停时显示，恢复时隐藏）-->
+            <div class="focus-pause-time" id="focusPauseTime" style="display:none">
+                <i class="fa-solid fa-circle-pause"></i>
+                暂停于 <span id="focusPauseTimeText"></span>
+            </div>
+
             <!-- 完成提示（默认隐藏）-->
             <div class="focus-complete-msg" id="focusCompleteMsg" style="display:none">
                 <div class="focus-complete-icon">🎉</div>
@@ -6905,6 +6926,12 @@
             tags: [],               // 标签列表（从后端加载）
             timerId: null,          // setInterval 返回的 ID
             startedAt: null,        // 本次专注开始时间
+            _pausedDuration: 0,     // 累计暂停毫秒数（页面跳转恢复时也会用到）
+            _pausedAt: null,        // 最近一次暂停时间戳
+            _pausedAtDisplay: null, // 用于显示的"暂停时刻"（恢复场景保留用户实际暂停的时间）
+
+            // 计时状态持久化 key：跳转到图库/文件管理等其他页面后，返回时恢复计时
+            STORAGE_KEY: 'tinyweb_focus_timer_state',
 
             // SVG 进度条常量
             RING_CIRCUMFERENCE: 2 * Math.PI * 88,  // ≈ 553
@@ -7085,6 +7112,9 @@
                         self.closeDeleteConfirm();
                     }
                 });
+
+                // 恢复上次未完成的专注计时（跳转其他页面后返回时）
+                this._restore();
             },
 
             // ---- 悬浮球拖拽初始化 ----
@@ -7214,7 +7244,13 @@
                     this._pausedDuration += (now - this._pausedAt);
                 }
 
-                // 更新 UI
+                this._setRunningUI();
+                this._startTicking();
+                this._persist();
+            },
+
+            // ---- 设置运行中的 UI（开始/继续/恢复共用）----
+            _setRunningUI: function() {
                 var startBtn = document.getElementById('focusStartBtn');
                 startBtn.className = 'focus-ctrl-btn pause-btn';
                 startBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
@@ -7232,7 +7268,31 @@
                 // 禁用标签和时长选择
                 this._setConfigDisabled(true);
 
-                // 启动定时器（500ms刷新，显示更流畅；用时间差计算所以不怕节流）
+                // 恢复专注时隐藏暂停时刻小字
+                this._hidePauseTime();
+            },
+
+            // ---- 显示/隐藏暂停时刻小字 ----
+            _showPauseTime: function() {
+                var el = document.getElementById('focusPauseTime');
+                var textEl = document.getElementById('focusPauseTimeText');
+                if (!el || !textEl) return;
+                // 优先用"用户实际暂停时刻"（恢复场景），正常暂停用 _pausedAt
+                var ts = this._pausedAtDisplay || this._pausedAt;
+                if (!ts) return;
+                var d = new Date(ts);
+                var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+                textEl.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+                el.style.display = 'flex';
+            },
+            _hidePauseTime: function() {
+                var el = document.getElementById('focusPauseTime');
+                if (el) el.style.display = 'none';
+            },
+
+            // ---- 启动 tick 定时器（500ms刷新，用时间差计算不怕节流）----
+            _startTicking: function() {
+                var self = this;
                 clearInterval(this.timerId);
                 this.timerId = setInterval(function() {
                     self.tick();
@@ -7245,7 +7305,15 @@
                 clearInterval(this.timerId);
                 this.timerId = null;
                 this._pausedAt = Date.now();
+                // 记录暂停这一刻的时间，供下方小字展示
+                this._pausedAtDisplay = this._pausedAt;
 
+                this._setPausedUI();
+                this._persist();
+            },
+
+            // ---- 设置暂停中的 UI（暂停/恢复共用）----
+            _setPausedUI: function() {
                 var startBtn = document.getElementById('focusStartBtn');
                 startBtn.className = 'focus-ctrl-btn start-btn';
                 startBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -7259,6 +7327,9 @@
                 );
                 var focusedMins = Math.floor(focusedSeconds / 60);
                 document.getElementById('focusFragmentBtn').disabled = focusedMins < 3;
+
+                // 显示暂停时刻小字（提醒用户暂停了，防止忘记恢复）
+                this._showPauseTime();
             },
 
             // ---- 显示暂停确认弹窗（专注碎片功能新增）----
@@ -7512,6 +7583,8 @@
                 this.updateDisplay();
                 this.updateRing(1);
                 this._setConfigDisabled(false);
+                this._hidePauseTime();
+                this._clearPersist();
             },
 
             // ---- 切换到碎片保存模式（专注碎片功能新增）----
@@ -7561,6 +7634,9 @@
 
             // ---- 专注完成 ----
             finish: function() {
+                // 计时完成，清除持久化状态，防止页面刷新后重复恢复
+                this._clearPersist();
+                this._hidePauseTime();
                 this.state = 'idle';
                 clearInterval(this.timerId);
                 this.timerId = null;
@@ -7765,6 +7841,85 @@
                 tagBtns.forEach(function(b) { b.disabled = disabled; b.style.opacity = disabled ? '0.5' : ''; });
                 var durBtns = document.querySelectorAll('#focusDurations .focus-duration-btn');
                 durBtns.forEach(function(b) { b.disabled = disabled; b.style.opacity = disabled ? '0.5' : ''; });
+            },
+
+            // ---- 持久化计时状态到 localStorage ----
+            // 作用：跳转到图库/文件管理等其他页面时，页面被卸载、内存状态全部丢失；
+            //       把运行中的计时状态保存下来，返回本页时恢复，不中断。
+            _persist: function() {
+                if (this.state === 'idle') return; // idle 状态无需保存
+                try {
+                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
+                        state: this.state,
+                        duration: this.duration,
+                        startedAt: this.startedAt,
+                        pausedDuration: this._pausedDuration || 0,
+                        pausedAt: this._pausedAt || null,
+                        tag: this.tag,
+                        tagColor: this.tagColor
+                    }));
+                } catch(e) {
+                    console.warn('[FocusTimer] 持久化计时状态失败:', e);
+                }
+            },
+
+            // ---- 清除持久化的计时状态 ----
+            _clearPersist: function() {
+                try { localStorage.removeItem(this.STORAGE_KEY); } catch(e) {}
+            },
+
+            // ---- 恢复上次未完成的专注计时（init 时调用）----
+            _restore: function() {
+                var saved = null;
+                try { saved = JSON.parse(localStorage.getItem(this.STORAGE_KEY)); } catch(e) {}
+                if (!saved || (saved.state !== 'running' && saved.state !== 'paused')) {
+                    return;
+                }
+
+                // 恢复基础设置
+                this.duration = saved.duration || this.duration;
+                this.tag = saved.tag || '未分类';
+                this.tagColor = saved.tagColor || '#6c5ce7';
+                this.startedAt = saved.startedAt;
+                this._pausedDuration = saved.pausedDuration || 0;
+                this._pausedAt = saved.pausedAt || null;
+
+                var now = Date.now();
+
+                if (saved.state === 'paused') {
+                    // 保留用户实际暂停的时刻用于展示，再把页面关闭期间计入暂停时长（不算专注时间）
+                    this._pausedAtDisplay = saved.pausedAt;
+                    this._pausedDuration += (now - this._pausedAt);
+                    this._pausedAt = now;
+                }
+
+                // 用真实时间差计算剩余（跳转期间的时间会正确扣除）
+                var elapsed = (now - this.startedAt - this._pausedDuration) / 1000;
+                this.remaining = Math.max(0, Math.ceil(this.duration - elapsed));
+
+                if (elapsed >= this.duration) {
+                    // 页面关闭期间计时已到点：按完成处理（保存记录 + 完成弹窗）
+                    this.finish();
+                    return;
+                }
+
+                // 更新显示
+                this.updateDisplay();
+                this.updateRing(this.remaining / this.duration);
+                document.getElementById('focusTagText').textContent = this.tag;
+
+                if (saved.state === 'running') {
+                    // 运行中离开：恢复运行，继续倒计时
+                    this.state = 'running';
+                    this._setRunningUI();
+                    this._startTicking();
+                    this._persist();
+                } else {
+                    // 保持暂停状态
+                    this.state = 'paused';
+                    this._setPausedUI();
+                    this._persist();
+                }
             },
 
             // ---- 请求桌面通知权限 ----
@@ -7985,7 +8140,8 @@
 
             // ---- 显示删除确认弹窗 ----
             showDeleteConfirm: function(tagId, tagName) {
-                this._tagToDelete = { id: tagId, name: tagName };
+                // tagId 来自 DOM 属性，是字符串；转成数字，避免后续 !== 比较因类型不同而失效
+                this._tagToDelete = { id: parseInt(tagId, 10), name: tagName };
                 document.getElementById('confirmTagName').textContent = tagName;
                 document.getElementById('focusDeleteConfirmOverlay').classList.add('show');
             },
@@ -8006,14 +8162,16 @@
             // ---- 删除标签 ----
             deleteTag: function(tagId, tagName) {
                 var self = this;
-                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/tags/' + tagId, {
+                // 统一转成数字：DOM 属性读出来是字符串，避免后面 !== 因类型不一致而判断失败
+                var id = parseInt(tagId, 10);
+                AuthManager.fetchWithAuth(this.API_BASE + '/api/focus/tags/' + id, {
                     method: 'DELETE'
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
                     if (res.code === 0) {
-                        // 删除成功，从本地列表中移除
-                        self.tags = self.tags.filter(function(t) { return t.id !== tagId; });
+                        // 删除成功，从本地列表中移除（用 Number 转换防止类型不一致）
+                        self.tags = self.tags.filter(function(t) { return Number(t.id) !== id; });
                         // 如果当前选中的标签被删除了，切换到默认标签
                         if (self.tag === tagName) {
                             self.selectTag('Go语言', '#FF6B6B');
